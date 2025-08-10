@@ -1,0 +1,6 @@
+.env
+tests
+build
+wailsjs
+release
+node_modules
