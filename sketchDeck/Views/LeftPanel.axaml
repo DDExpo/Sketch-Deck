@@ -1,0 +1,11 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="sketchDeck.Views.LeftPanel">
+
+    <Border Grid.Row="0"
+            Background="{DynamicResource Brush.PaneBackground}"
+            BorderBrush="{DynamicResource Brush.Border}"
+            Padding="12">
+        <TextBlock Text="Collections" Foreground="{DynamicResource Brush.Text}"/>
+    </Border>
+</UserControl>

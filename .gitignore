@@ -1,6 +1,3 @@
-.env
-tests
-build
-wailsjs
-release
-node_modules
+test
+sketchDeck/bin
+sketchDeck/obj

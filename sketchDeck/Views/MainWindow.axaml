@@ -1,0 +1,30 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:sketchDeck.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:sketchDeck.ViewModels"
+        xmlns:views="clr-namespace:sketchDeck.Views"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        MinWidth="522" MinHeight="600"
+        x:Class="sketchDeck.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="SketchDeck">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"   MinWidth="150"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"   MinWidth="250"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"   MinWidth="112"/>
+        </Grid.ColumnDefinitions>
+
+        <views:LeftPanel Grid.Column="0"/>
+        <GridSplitter Grid.Column="1" Width="5" Background="{DynamicResource Brush.Border}" ResizeDirection="Columns"/>
+        <views:MiddlePanel Grid.Column="2"/>
+        <GridSplitter Grid.Column="3" Width="5" Background="{DynamicResource Brush.Border}" ResizeDirection="Columns"/>
+        <views:RightPanel Grid.Column="4"/>
+    
+    </Grid>
+</Window>
