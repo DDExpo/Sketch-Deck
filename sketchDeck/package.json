@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "@vue-dnd-kit/core": "^1.5.2",
-    "@vueuse/core": "^13.4.0"
-  }
-}
