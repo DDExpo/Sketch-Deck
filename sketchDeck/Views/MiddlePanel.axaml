@@ -3,12 +3,13 @@
              xmlns:models="clr-namespace:sketchDeck.Models"
              xmlns:vm="clr-namespace:sketchDeck.ViewModels"
              xmlns:local="clr-namespace:sketchDeck"
-             xmlns:conv="clr-namespace:sketchDeck.MiddlePanel"
+             xmlns:conv="clr-namespace:sketchDeck.ViewModels"
              xmlns:ir="using:Avalonia.Controls"
              x:Class="sketchDeck.Views.MiddlePanel"
-             x:DataType="vm:MainWindowViewModel">
+             x:DataType="vm:MiddlePanelViewModel">
+
     <UserControl.Resources>
-        <DataTemplate x:Key="DetailsTemplate" x:DataType="vm:MainWindowViewModel">
+        <DataTemplate x:Key="DetailsTemplate" x:DataType="vm:MiddlePanelViewModel">
             <DataGrid ItemsSource="{Binding Images}"
                     AutoGenerateColumns="False"
                     HeadersVisibility="Column"
@@ -18,7 +19,7 @@
                     <DataGridTemplateColumn Width="64">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <Image Source="{Binding Thumbnail}" Width="48" Height="48" Margin="10"/>
+                                <Image Source="{Binding Thumbnail, Converter={StaticResource ThumbnailConverter}}" Width="48" Height="48" Margin="10"/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
@@ -29,7 +30,7 @@
                 </DataGrid.Columns>
             </DataGrid>
         </DataTemplate>
-        <DataTemplate x:Key="SmallTemplate" x:DataType="vm:MainWindowViewModel">
+        <DataTemplate x:Key="SmallTemplate" x:DataType="vm:MiddlePanelViewModel">
             <ScrollViewer>
                 <ir:ItemsRepeater ItemsSource="{Binding Images}">
                     <ir:ItemsRepeater.Layout>
@@ -38,8 +39,8 @@
 
                     <ir:ItemsRepeater.ItemTemplate>
                         <DataTemplate>
-                            <StackPanel Margin="10" Width="148">
-                                <Image Source="{Binding Thumbnail}" 
+                            <StackPanel Margin="10" Width="148" DoubleTapped="OnImageDoubleTapped">
+                                <Image Source="{Binding Thumbnail, Converter={StaticResource ThumbnailConverter}}" 
                                     Width="128" Height="128"
                                     Stretch="Uniform"/>
                                 <TextBlock Text="{Binding Name}" 
@@ -51,7 +52,7 @@
                 </ir:ItemsRepeater>
             </ScrollViewer>
         </DataTemplate>
-        <DataTemplate x:Key="MediumTemplate" x:DataType="vm:MainWindowViewModel">
+        <DataTemplate x:Key="MediumTemplate" x:DataType="vm:MiddlePanelViewModel">
             <ScrollViewer>
                 <ir:ItemsRepeater ItemsSource="{Binding Images}">
                     <ir:ItemsRepeater.Layout>
@@ -60,8 +61,8 @@
 
                     <ir:ItemsRepeater.ItemTemplate>
                         <DataTemplate>
-                            <StackPanel Margin="10" Width="276">
-                                <Image Source="{Binding Thumbnail}" 
+                            <StackPanel Margin="10" Width="276" DoubleTapped="OnImageDoubleTapped">
+                                <Image Source="{Binding Thumbnail, Converter={StaticResource ThumbnailConverter}}" 
                                     Width="256" Height="256"
                                     Stretch="Uniform"/>
                                 <TextBlock Text="{Binding Name}" 
@@ -73,7 +74,7 @@
                 </ir:ItemsRepeater>
             </ScrollViewer>
         </DataTemplate>
-        <DataTemplate x:Key="BigTemplate" x:DataType="vm:MainWindowViewModel">
+        <DataTemplate x:Key="BigTemplate" x:DataType="vm:MiddlePanelViewModel">
             <ScrollViewer>
                 <ir:ItemsRepeater ItemsSource="{Binding Images}">
                     <ir:ItemsRepeater.Layout>
@@ -82,8 +83,8 @@
 
                     <ir:ItemsRepeater.ItemTemplate>
                         <DataTemplate>
-                            <StackPanel Margin="10" Width="376">
-                                <Image Source="{Binding Thumbnail}" 
+                            <StackPanel Margin="10" Width="376" DoubleTapped="OnImageDoubleTapped">
+                                <Image Source="{Binding Thumbnail, Converter={StaticResource ThumbnailConverter}}" 
                                     Width="356" Height="356"
                                     Stretch="Uniform"/>
                                 <TextBlock Text="{Binding Name}" 
@@ -95,7 +96,7 @@
                 </ir:ItemsRepeater>
             </ScrollViewer>
         </DataTemplate>
-        <DataTemplate x:Key="GiganticTemplate" x:DataType="vm:MainWindowViewModel">
+        <DataTemplate x:Key="GiganticTemplate" x:DataType="vm:MiddlePanelViewModel">
             <ScrollViewer>
                 <ir:ItemsRepeater ItemsSource="{Binding Images}">
                     <ir:ItemsRepeater.Layout>
@@ -104,8 +105,8 @@
 
                     <ir:ItemsRepeater.ItemTemplate>
                         <DataTemplate>
-                            <StackPanel Margin="10" Width="532">
-                                <Image Source="{Binding Thumbnail}" 
+                            <StackPanel Margin="10" Width="532" DoubleTapped="OnImageDoubleTapped">
+                                <Image Source="{Binding Thumbnail, Converter={StaticResource ThumbnailConverter}}" 
                                     Width="512" Height="512"
                                     Stretch="Uniform"/>
                                 <TextBlock Text="{Binding Name}" 
@@ -123,6 +124,7 @@
                                 Medium="{StaticResource MediumTemplate}"
                                 Big="{StaticResource BigTemplate}"
                                 Gigantic="{StaticResource GiganticTemplate}"/>
+        <conv:ThumbnailConverter x:Key="ThumbnailConverter" />
     </UserControl.Resources>
 
     <Grid RowDefinitions="Auto,Auto,*" Background="#1E1E1E">

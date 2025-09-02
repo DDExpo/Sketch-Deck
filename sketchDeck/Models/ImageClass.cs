@@ -1,6 +1,10 @@
-using Avalonia.Media.Imaging;
 using System;
 using System.IO;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Formats.Png;
+using System.Threading.Tasks;
 
 namespace sketchDeck.Models;
 
@@ -10,22 +14,24 @@ public class ImageItem
     public string Name { get; set; } = "";
     public string Type { get; set; } = "";
     public string Size { get; set; } = "";
+    public string Thumbnail { get; set; } = "";
     public DateTime DateModified { get; set; }
-    public Bitmap? Thumbnail { get; set; }
-    public int Order { get; set; } 
 
-    public static ImageItem FromPath(string path)
+    public static async Task<ImageItem> FromPathAsync(string path)
     {
         var info = new FileInfo(path);
-        return new ImageItem
+
+        var item = new ImageItem
         {
             PathImage = path,
             Name = info.Name,
             Type = string.IsNullOrEmpty(info.Extension) ? "File" : info.Extension.Trim('.').ToUpper(),
             Size = FormatSize(info.Length),
             DateModified = info.LastWriteTime,
-            Thumbnail = ThumbnailCache.LoadOrCreateThumbnail(path),
+            Thumbnail = await ThumbnailCache.LoadOrCreateThumbnailAsync(path)
         };
+
+        return item;
     }
     private static string FormatSize(long bytes)
     {
@@ -43,49 +49,28 @@ public class ImageItem
     {
         private static readonly string exeDir = AppContext.BaseDirectory;
         private static readonly string CacheDir = Path.Combine(exeDir, "bin", "thumbs");
-
         static ThumbnailCache()
         {
             Directory.CreateDirectory(CacheDir);
         }
-
-        public static Bitmap CreateThumbnail(Bitmap original)
+        private static string GetCachePath(string filePath)
         {
-            var widthRatio = (double)512 / original.PixelSize.Width;
-            var heightRatio = (double)512 / original.PixelSize.Height;
-
-            var scale = Math.Min(widthRatio, heightRatio);
-
-            var newWidth = (int)(original.PixelSize.Width * scale);
-            var newHeight = (int)(original.PixelSize.Height * scale);
-
-            return original.CreateScaledBitmap(
-                new Avalonia.PixelSize(newWidth, newHeight),
-                BitmapInterpolationMode.HighQuality);
+            var hash = filePath.GetHashCode().ToString("X8");
+            return Path.Combine(CacheDir, hash + ".png");
         }
-        public static string GetCachePath(string filePath)
+        
+        public static async Task<string> LoadOrCreateThumbnailAsync(string filePath)
         {
-            var hash = Convert.ToHexString(System.Security.Cryptography.SHA1.HashData(System.Text.Encoding.UTF8.GetBytes(filePath)));
-            return Path.Combine(CacheDir, $"{hash}_{512}.png");
-        }
-        public static Bitmap LoadOrCreateThumbnail(string filePath)
-        {
-            var cachePath = ThumbnailCache.GetCachePath(filePath);
+            var cachePath = GetCachePath(filePath);
 
             if (File.Exists(cachePath))
-            {
-                return new Bitmap(cachePath);
-            }
+                return cachePath;
 
-            using var bmp = new Bitmap(filePath);
-            var thumb = CreateThumbnail(bmp);
+            using var image = await Image.LoadAsync<Rgba32>(new DecoderOptions {TargetSize = new Size(512, 0), SkipMetadata = true}, filePath);
 
-            using (var fs = File.OpenWrite(cachePath))
-            {
-                thumb.Save(fs);
-            }
+            await image.SaveAsync(cachePath, new PngEncoder {CompressionLevel = PngCompressionLevel.DefaultCompression, SkipMetadata = true});
 
-            return thumb;
+            return cachePath;
         }
     }
 }

@@ -22,7 +22,7 @@
 
         <views:LeftPanel Grid.Column="0"/>
         <GridSplitter Grid.Column="1" Width="5" Background="{DynamicResource Brush.Border}" ResizeDirection="Columns"/>
-        <views:MiddlePanel Grid.Column="2"/>
+        <views:MiddlePanel DataContext="{Binding MiddlePanel}" Grid.Column="2"/>
         <GridSplitter Grid.Column="3" Width="5" Background="{DynamicResource Brush.Border}" ResizeDirection="Columns"/>
         <views:RightPanel Grid.Column="4"/>
     
