@@ -1,21 +1,34 @@
 using System;
 using System.IO;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Formats.Png;
 using System.Threading.Tasks;
+
+using Avalonia.Media;
+
+using CommunityToolkit.Mvvm.ComponentModel;
+
+using PhotoSauce.MagicScaler;
 
 namespace sketchDeck.Models;
 
-public class ImageItem
+public partial class ImageItem : ObservableObject
 {
-    public string PathImage { get; set; } = "";
-    public string Name { get; set; } = "";
-    public string Type { get; set; } = "";
-    public string Size { get; set; } = "";
-    public string Thumbnail { get; set; } = "";
+    public string PathImage { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty;
+    public string Thumbnail { get; set; } = string.Empty;
+    public IBrush BgColor { get; set; } = Brushes.Gray;
+    [ObservableProperty]
+    public bool _isSelected;
     public DateTime DateModified { get; set; }
+    public long Size { get; set; }
+    public string SizeDisplay =>
+    Size switch
+    {
+        >= 1024 * 1024 * 1024 => $"{Size / (1024.0 * 1024 * 1024):F2} GB",
+        >= 1024 * 1024 => $"{Size / (1024.0 * 1024):F2} MB",
+        >= 1024 => $"{Size / 1024.0:F2} KB",
+        _ => $"{Size} B"
+    };
 
     public static async Task<ImageItem> FromPathAsync(string path)
     {
@@ -26,24 +39,12 @@ public class ImageItem
             PathImage = path,
             Name = info.Name,
             Type = string.IsNullOrEmpty(info.Extension) ? "File" : info.Extension.Trim('.').ToUpper(),
-            Size = FormatSize(info.Length),
+            Size = info.Length,
             DateModified = info.LastWriteTime,
             Thumbnail = await ThumbnailCache.LoadOrCreateThumbnailAsync(path)
         };
 
         return item;
-    }
-    private static string FormatSize(long bytes)
-    {
-        string[] sizes = ["B", "KB", "MB", "GB", "TB"];
-        double len = bytes;
-        int order = 0;
-        while (len >= 1024 && order < sizes.Length - 1)
-        {
-            order++;
-            len /= 1024;
-        }
-        return $"{len:0.##} {sizes[order]}";
     }
     public static class ThumbnailCache
     {
@@ -55,7 +56,11 @@ public class ImageItem
         }
         private static string GetCachePath(string filePath)
         {
-            var hash = filePath.GetHashCode().ToString("X8");
+            long hash = 1469598103934665603L;
+            foreach (var c in filePath)
+            {
+                hash = (hash ^ c) * 1099511628211;
+            }
             return Path.Combine(CacheDir, hash + ".png");
         }
         
@@ -66,9 +71,10 @@ public class ImageItem
             if (File.Exists(cachePath))
                 return cachePath;
 
-            using var image = await Image.LoadAsync<Rgba32>(new DecoderOptions {TargetSize = new Size(512, 0), SkipMetadata = true}, filePath);
+            using var stream = File.OpenRead(filePath);
+            using var outputStream = File.Create(cachePath);
 
-            await image.SaveAsync(cachePath, new PngEncoder {CompressionLevel = PngCompressionLevel.DefaultCompression, SkipMetadata = true});
+            await Task.Run(() => MagicImageProcessor.ProcessImage(stream, outputStream, new ProcessImageSettings { Width = 512 }));
 
             return cachePath;
         }

@@ -1,11 +1,109 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="sketchDeck.Views.LeftPanel">
+             xmlns:vm="clr-namespace:sketchDeck.ViewModels"
+             xmlns:local="clr-namespace:sketchDeck.Views"
+             x:Class="sketchDeck.Views.LeftPanel"
+             x:DataType="vm:LeftPanelViewModel">
 
-    <Border Grid.Row="0"
-            Background="{DynamicResource Brush.PaneBackground}"
-            BorderBrush="{DynamicResource Brush.Border}"
-            Padding="12">
-        <TextBlock Text="Collections" Foreground="{DynamicResource Brush.Text}"/>
-    </Border>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+
+        <Grid RowDefinitions="Auto,*,*">
+            <Border Grid.Row="0" Background="#2B2B2B" BorderBrush="#3C3C3C" BorderThickness="1" CornerRadius="8" MaxHeight="250" Padding="12" Margin="10,15,20,15" BoxShadow="0 2 6 #80000000">
+                <DockPanel>
+                    <TextBlock Text="Collections" FontSize="14" FontWeight="Bold" DockPanel.Dock="Top" Margin="0,0,0,8"/>
+
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+
+                        <ListBox x:Name="CollectionsList" BorderThickness="0" DragDrop.AllowDrop="True" DragDrop.Drop="CollectionsList_OnDrop">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate DataType="local:CollectionItem">
+                                        <Grid ColumnDefinitions="*,Auto" Margin="0,4">
+
+                                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Grid.Column="0">
+                                                <TextBlock Text="{Binding Name}" Foreground="White" FontSize="13" TextTrimming="CharacterEllipsis"  VerticalAlignment="Center" />
+                                                <TextBlock Text="{Binding Count, StringFormat=' {0} ele'}" Foreground="#aaa" FontSize="12" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                            <Button Content="Delete" Grid.Column="1" Background="#d9534f" Foreground="White" BorderBrush="#d9534f" CornerRadius="4" Margin="0,0,15,0" Padding="6,2" FontSize="12" MinWidth="50" HorizontalAlignment="Right"
+                                                    Click="DeleteCollection_Click"/>
+                                        </Grid>
+                                    </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </ScrollViewer>
+                </DockPanel>
+            </Border>
+
+            <Grid Grid.Row="1" RowDefinitions="Auto,Auto,*" Margin="10,15,15,15" VerticalAlignment="Center">
+
+                <WrapPanel Grid.Row="0" Orientation="Horizontal" ItemSpacing="10" HorizontalAlignment="Left" ItemHeight="36">
+                    <ComboBox Width="120" MinHeight="28" MaxHeight="28" FontSize="12" Cursor="Hand" Margin="0,4,0,0" Background="#2B2B2B" Foreground="White" BorderBrush="#444" CornerRadius="4"
+                            ItemsSource="{Binding Views}" SelectedItem="{Binding Parent.SelectedView, Mode=TwoWay}"/>
+
+                    <Button Width="28" Height="28" Cursor="Hand" Background="#333" BorderBrush="#444" CornerRadius="6" ToolTip.Tip="Open File"
+                            Click="OpenFilesButton_Clicked">
+                        <Grid>
+                            <Path Data="M 10 -1 H -2 C -2 -1 -3 -1 -3 0 V 16 C -3 16 -3 17 -2 17 H 12 C 13 17 13 16 13 16 V 4 L 10 -1"
+                                Stroke="White" StrokeThickness="1.3" StrokeJoin="Round"/>
+                            <Path Data="M 5 4 V 12 M 1 8 H 9"
+                                Stroke="White" StrokeThickness="1.3" StrokeLineCap="Round"/>
+                        </Grid>
+                    </Button>
+
+                    <Button Width="28" Height="28" Cursor="Hand" Background="#333" BorderBrush="#444" CornerRadius="6" ToolTip.Tip="Open Folder" HorizontalAlignment="Right"
+                            Click="OpenFolderButton_Clicked" >
+                        <Grid>
+                            <Path Data="M -4 -1 h 7 l 6.003 2 H 14 c 0.6628 0 0.785 0.438 1 1 v 14 c 0 0.6628 -0.5372 1.2 -1 1 H -3 c -0.6627 0 -2 0 -2 -2 V 0 c 0 0 0 -1 1 -1"
+                                Stroke="White" StrokeThickness="1.3" StrokeJoin="Round"/>
+                            <Path Data="M 5 4 V 12 M 1 8 H 9"
+                                Stroke="White" StrokeThickness="1.3" StrokeLineCap="Round"/>
+                        </Grid>
+                    </Button>
+
+                    <Button Width="120" Height="28" Cursor="Hand" FontSize="12" Content="Save as collection" Background="#3A6EA5" Foreground="White" BorderBrush="#3A6EA5" CornerRadius="6" ToolTip.Tip="Save current selection"/>
+                </WrapPanel>
+
+                <TextBox Grid.Row="1" Watermark="Search..." Height="35" FontSize="12" Margin="0,10,5,10" Padding="7,9,7,7" Background="#2B2B2B" Foreground="White" BorderBrush="#444" CornerRadius="6"
+                        Text="{Binding Parent.SearchTerm, UpdateSourceTrigger=Default}"/>
+
+                <WrapPanel Grid.Row="2" Orientation="Horizontal" ItemSpacing="10" ItemHeight="36">
+                    <ComboBox x:Name="ItemsComboBox" MinHeight="28" FontSize="12" MaxHeight="28" Width="120" SelectedIndex="0" Margin="0,4,0,0" Background="#2B2B2B" Foreground="White" BorderBrush="#444" CornerRadius="4">
+                        <ComboBox.Items>
+                            <ComboBoxItem Content="Current"/>
+                        </ComboBox.Items>
+                    </ComboBox>
+
+                    <Button Width="28" Height="28" Cursor="Hand" Background="#4CAF50" Foreground="White" BorderBrush="#4CAF50" CornerRadius="6" ToolTip.Tip="Start Session"
+                            Click="StartSessionButton_Clicked">
+                        <Path Data="M -1 -1 L 14 9 L -1 17 Z"
+                            Fill="White"/>
+                    </Button>
+                    <CheckBox x:Name="ShuffleCheck" Foreground="White" ToolTip.Tip="Randomizes the order of Images" Cursor="Hand" 
+                            IsChecked="{Binding IsShuffled, Mode=TwoWay}" />
+
+                    <StackPanel Orientation="Vertical" Spacing="2" Margin="0,4,0,0">
+                        <TextBox Width="120" MinHeight="28" MaxHeight="28" FontSize="12" Watermark="Seconds" Background="#2B2B2B" Foreground="White" BorderBrush="#444" CornerRadius="6"
+                                Text="{Binding TimeImage, Mode=TwoWay}"/>
+                        <TextBlock Text="0 or empty = infinite" FontSize="9" Opacity="0.6" Foreground="White" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </WrapPanel>
+            </Grid>
+
+            <ToggleButton Grid.Row="2" Width="32" Height="32" HorizontalAlignment="Left" VerticalAlignment="Bottom" BorderThickness="0" CornerRadius="18" Margin="10,0,0,10"
+                        ToolTip.Tip="Always on Top" Foreground="White" IsCheckedChanged="AlwaysOnTop_Click">
+                <Viewbox Stretch="Uniform" Width="20" Height="20">
+                    <Path Data="m102 133c-17.6 0-32-14.4-32-32s14.4-32 32-32 32 14.4 32 32-14.4 32-32 32m89.6-64c-12.8-36.8-48-64-89.6-64-52.8 0-96 43.2-96 96s43.2 96 96 96c41.6 0 76.8-27.2 89.6-64h54.4v64h64v-64h48v-64h-166.4z"
+                        Fill="White"/>
+                </Viewbox>
+                <ToggleButton.Styles>
+                    <Style Selector="ToggleButton">
+                        <Setter Property="Background" Value="#333"/>
+                    </Style>
+                    <Style Selector="ToggleButton:checked">
+                        <Setter Property="Background" Value="#2E86DE"/>
+                    </Style>
+                </ToggleButton.Styles>
+            </ToggleButton>
+        </Grid>
+    </ScrollViewer>
+
 </UserControl>

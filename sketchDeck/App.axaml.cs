@@ -1,9 +1,10 @@
+using System.Linq;
+
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
-using System.Linq;
 using Avalonia.Markup.Xaml;
+
 using sketchDeck.ViewModels;
 using sketchDeck.Views;
 
@@ -27,6 +28,7 @@ public partial class App : Application
             {
                 DataContext = new MainWindowViewModel(),
             };
+            desktop.ShutdownMode = Avalonia.Controls.ShutdownMode.OnMainWindowClose;
         }
 
         base.OnFrameworkInitializationCompleted();

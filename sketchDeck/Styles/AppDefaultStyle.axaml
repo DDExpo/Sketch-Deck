@@ -33,7 +33,20 @@
     <Setter Property="Foreground" Value="{DynamicResource Brush.Text}"/>
   </Style>
 
-  <Style Selector="Button">
+  <Style Selector="Border.selectable:pointerover">
+    <Setter Property="Background" Value="{DynamicResource Brush.Hover}"/>
+  </Style>
+  <Style Selector="Border.selectable:selected">
+    <Setter Property="Background" Value="{DynamicResource Win10.Selection}"/>
+    <Setter Property="BorderBrush" Value="#3399FF"/>
+    <Setter Property="TextBlock.Foreground" Value="White"/>
+  </Style>
+  <Style Selector="Border.selectable:focus">
+    <Setter Property="BorderBrush" Value="#88000000"/>
+    <Setter Property="BorderThickness" Value="1"/>
+  </Style>
+
+  <Style Selector="Button, ToggleButton">
     <Setter Property="Background" Value="{DynamicResource Brush.PaneBackground}"/>
     <Setter Property="Foreground" Value="{DynamicResource Brush.Text}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}"/>
@@ -84,6 +97,13 @@
   </Style>
   <Style Selector="ComboBox:disabled">
     <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}"/>
+  </Style>
+
+  <Style Selector="ScrollBar[Orientation=Vertical] Thumb">
+    <Setter Property="Width" Value="6"/>
+  </Style>
+  <Style Selector="ScrollBar[Orientation=Horizontal] Thumb">
+    <Setter Property="Height" Value="6"/>
   </Style>
 
   <Style Selector="ListBox, TreeView, DataGrid">

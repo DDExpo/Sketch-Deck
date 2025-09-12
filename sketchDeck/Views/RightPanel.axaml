@@ -1,0 +1,142 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:sketchDeck.ViewModels"
+             xmlns:conv="clr-namespace:sketchDeck.ViewModels"
+             xmlns:ir="using:Avalonia.Controls"
+             x:Class="sketchDeck.Views.RightPanel"
+             x:DataType="vm:RightPanelViewModel">
+
+    <UserControl.Resources>
+        <DataTemplate x:Key="DetailsTemplate" x:DataType="vm:RightPanelViewModel">
+            <DataGrid ItemsSource="{Binding Parent.Images}" Sorting="OnSorting" AutoGenerateColumns="False" HeadersVisibility="Column" CanUserResizeColumns="True" IsReadOnly="True">
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Width="64">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel DoubleTapped="OnImageDoubleTapped">
+                                    <Image Source="{Binding Thumbnail, Converter={StaticResource ThumbnailConverter}}" Width="48" Height="48" Margin="10"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" SortMemberPath="Name" Width="96"/>
+                    <DataGridTextColumn Header="Type" Binding="{Binding Type}" SortMemberPath="Type" Width="72"/>
+                    <DataGridTextColumn Header="Size" Binding="{Binding SizeDisplay}" SortMemberPath="Size" Width="84"/>
+                    <DataGridTextColumn Header="Date" Binding="{Binding DateModified}" SortMemberPath="DateModified" Width="184"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </DataTemplate>
+        
+        <DataTemplate x:Key="SmallTemplate" x:DataType="vm:RightPanelViewModel">
+            <ScrollViewer>
+                <ir:ItemsRepeater ItemsSource="{Binding Parent.Images}">
+                    <ir:ItemsRepeater.Layout>
+                        <UniformGridLayout Orientation="Horizontal"
+                                           MinColumnSpacing="10"
+                                           MinRowSpacing="10"
+                                           MinItemWidth="128"
+                                           MinItemHeight="148"/>
+                    </ir:ItemsRepeater.Layout>
+                    <ir:ItemsRepeater.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel DoubleTapped="OnImageDoubleTapped">
+                                <Image Source="{Binding Thumbnail, Converter={StaticResource ThumbnailConverter}}"
+                                       Width="128" Height="128"/>
+                                <TextBlock Text="{Binding Name}" Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ir:ItemsRepeater.ItemTemplate>
+                </ir:ItemsRepeater>
+            </ScrollViewer>
+        </DataTemplate>
+
+        <DataTemplate x:Key="MediumTemplate" x:DataType="vm:RightPanelViewModel">
+            <ScrollViewer>
+                <ir:ItemsRepeater ItemsSource="{Binding Parent.Images}">
+                    <ir:ItemsRepeater.Layout>
+                        <UniformGridLayout Orientation="Horizontal"
+                                           MinColumnSpacing="10"
+                                           MinRowSpacing="10"
+                                           MinItemWidth="276"
+                                           MinItemHeight="296"/>
+                    </ir:ItemsRepeater.Layout>
+                    <ir:ItemsRepeater.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel DoubleTapped="OnImageDoubleTapped">
+                                <Image Source="{Binding Thumbnail, Converter={StaticResource ThumbnailConverter}}"
+                                       Width="256" Height="256"/>
+                                <TextBlock Text="{Binding Name}" Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ir:ItemsRepeater.ItemTemplate>
+                </ir:ItemsRepeater>
+            </ScrollViewer>
+        </DataTemplate>
+
+        <DataTemplate x:Key="BigTemplate" x:DataType="vm:RightPanelViewModel">
+            <ScrollViewer>
+                <ir:ItemsRepeater ItemsSource="{Binding Parent.Images}">
+                    <ir:ItemsRepeater.Layout>
+                        <UniformGridLayout Orientation="Horizontal"
+                                           MinColumnSpacing="10"
+                                           MinRowSpacing="10"
+                                           MinItemWidth="376"
+                                           MinItemHeight="396"/>
+                    </ir:ItemsRepeater.Layout>
+                    <ir:ItemsRepeater.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel DoubleTapped="OnImageDoubleTapped">
+                                <Image Source="{Binding Thumbnail, Converter={StaticResource ThumbnailConverter}}"
+                                       Width="356" Height="356"/>
+                                <TextBlock Text="{Binding Name}" Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ir:ItemsRepeater.ItemTemplate>
+                </ir:ItemsRepeater>
+            </ScrollViewer>
+        </DataTemplate>
+
+        <DataTemplate x:Key="GiganticTemplate" x:DataType="vm:RightPanelViewModel">
+            <ScrollViewer>
+                <ir:ItemsRepeater ItemsSource="{Binding Parent.Images}">
+                    <ir:ItemsRepeater.Layout>
+                        <UniformGridLayout Orientation="Horizontal"
+                                        MinColumnSpacing="10"
+                                        MinRowSpacing="10"
+                                        MinItemWidth="532"
+                                        MinItemHeight="552"/>
+                    </ir:ItemsRepeater.Layout>
+                    <ir:ItemsRepeater.ItemTemplate>
+                        <DataTemplate>
+                            <Border Classes="selectable" Margin="2" Padding="4" CornerRadius="4" PointerPressed="OnItemPointerPressed">
+                                <StackPanel DoubleTapped="OnImageDoubleTapped">
+                                    <Image Source="{Binding Thumbnail, Converter={StaticResource ThumbnailConverter}}"
+                                        Width="512" Height="512"/>
+                                    <TextBlock Text="{Binding Name}" Margin="0,4,0,0"/>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ir:ItemsRepeater.ItemTemplate>
+                </ir:ItemsRepeater>
+            </ScrollViewer>
+        </DataTemplate>
+
+        <conv:ViewToTemplateConverter x:Key="ViewToTemplateConverter"
+                                      Details="{StaticResource DetailsTemplate}"
+                                      Small="{StaticResource SmallTemplate}"
+                                      Medium="{StaticResource MediumTemplate}"
+                                      Big="{StaticResource BigTemplate}"
+                                      Gigantic="{StaticResource GiganticTemplate}"/>
+        <conv:ThumbnailConverter x:Key="ThumbnailConverter" />
+    </UserControl.Resources>
+
+    <Grid RowDefinitions="Auto,Auto,*" Background="#1E1E1E">
+        <ContentControl x:Name="ContentHost" Margin="15,15,15,15" Grid.Row="2" Content="{Binding}"
+                        ContentTemplate="{Binding Parent.SelectedView, Converter={StaticResource ViewToTemplateConverter}}"/>
+        <Canvas Grid.Row="2" IsHitTestVisible="False"
+                x:Name="OverlayCanvas"  Background="Transparent">
+            <Rectangle x:Name="SelectionRect" Stroke="Blue" StrokeThickness="1"
+                        Fill="#400000FF" IsVisible="False"/>
+        </Canvas>
+    </Grid>
+</UserControl>
