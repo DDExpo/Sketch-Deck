@@ -15,6 +15,8 @@ using Avalonia.Media;
 using Avalonia.Threading;
 
 using CommunityToolkit.Mvvm.ComponentModel;
+using DynamicData;
+
 using sketchDeck.CustomAxaml;
 using sketchDeck.Models;
 
@@ -24,23 +26,31 @@ public partial class LeftPanelViewModel(MainWindowViewModel parent) : Observable
 {
     public MainWindowViewModel Parent { get; } = parent;
     public string[] Views { get; } = ["Gigantic", "Big", "Medium", "Small", "Details"];
-    [ObservableProperty]
-    private string? _timeImage = "0";
-    [ObservableProperty]
-    private bool _isShuffled = false;
-    public async Task LoadFolderAsync(string[] files, CancellationToken token)
+    [ObservableProperty] private string? _timeImage = "0";
+    [ObservableProperty] private bool _isShuffled = false;
+    public void SaveCollection(string name)
     {
-        Parent.ClearImages();
+        var newCollection = CollectionItem.FromImages(new SourceList<ImageItem>(), name);
+        Parent.Collections.Add(newCollection);
+        Parent.SelectedCollection = Parent.Collections.Count - 1;
+    }
+
+    public async Task LoadPathsAsync(string[] files, CancellationToken token)
+    {
+        if (Parent.SelectedCollection is null || 
+            Parent.SelectedCollection < 0 || 
+            Parent.SelectedCollection >= Parent.Collections.Count)
+            return;
 
         foreach (var file in files)
         {
             token.ThrowIfCancellationRequested();
             var item = await ImageItem.FromPathAsync(file);
             Parent.CurrentImagePath = file;
-            Parent.AddImage(item);
+            Parent.Collections[Parent.SelectedCollection.Value].CollectionImages.Add(item);
         }
     }
-    public async Task ImagesLoader(string[] paths)
+    public async Task ImagesLoader(string[] paths, Window window)
     {
         if (paths is null || paths.Length == 0) return;
         using var cts = new CancellationTokenSource();
@@ -49,20 +59,12 @@ public partial class LeftPanelViewModel(MainWindowViewModel parent) : Observable
 
         popup.Closed += (_, __) => cts.Cancel();
 
-        popup.Show();
+        _ = popup.ShowDialog(window);
 
-        try
-        {
-            await LoadFolderAsync(paths, cts.Token);
-        }
-        catch (OperationCanceledException)
-        {
-        }
+        try { await LoadPathsAsync(paths, cts.Token); }
+        catch (OperationCanceledException) {}
         finally
-        {
-            if (popup.IsVisible)
-                popup.Close();
-        }
+        { if (popup.IsVisible) popup.Close();}
     }
 }
 public class ViewToTemplateConverter : IValueConverter
@@ -97,7 +99,7 @@ public class SessionWindow : BaseWindow
     private readonly TextBlock _counterText;
     private readonly TextBlock _playButton = new() { Text = "▶", TextAlignment = TextAlignment.Center, FontSize = 12, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, -1, 0, 0) };
     private readonly DispatcherTimer? _slideshowTimer;
-    private int[] _shuffledIndices;
+    private readonly int[] _shuffledIndices;
     private readonly ReadOnlyObservableCollection<ImageItem> _imArray;
     private int _currentIndex;
     private readonly int _timePerImage;
@@ -117,17 +119,17 @@ public class SessionWindow : BaseWindow
         LoadImage(_imArray[_shuffledIndices[_currentIndex]].PathImage, _imArray[_shuffledIndices[_currentIndex]].BgColor);
 
         var overlayDock = new DockPanel { VerticalAlignment = VerticalAlignment.Bottom, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(10, 0, 20, 10) };
-        var controlsPanel = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Bottom, HorizontalAlignment = HorizontalAlignment.Left, Spacing = 5, IsVisible = true};
+        var controlsPanel = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Bottom, HorizontalAlignment = HorizontalAlignment.Left, Spacing = 5, IsVisible = true };
 
-        var prevButton = new Button { Width = 24, Height = 19, Padding = new Thickness(0), Content = new TextBlock { Text = "<", TextAlignment = TextAlignment.Center, FontSize = 18, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, -1, 0, 0) }};
+        var prevButton = new Button { Width = 24, Height = 19, Padding = new Thickness(0), Content = new TextBlock { Text = "<", TextAlignment = TextAlignment.Center, FontSize = 18, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, -1, 0, 0) } };
         prevButton.Click += (_, _) => ShowPrevious();
         _pausePlayButton = new Button { Width = 24, Height = 19, Padding = new Thickness(0), Content = _playButton, };
         _pausePlayButton.Click += (_, _) => TogglePause();
-        var nextButton = new Button { Width = 24, Height = 19, Padding = new Thickness(0), Content = new TextBlock { Text = ">", TextAlignment = TextAlignment.Center, FontSize = 18, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, -1, 0, 0) }};
+        var nextButton = new Button { Width = 24, Height = 19, Padding = new Thickness(0), Content = new TextBlock { Text = ">", TextAlignment = TextAlignment.Center, FontSize = 18, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, -1, 0, 0) } };
         nextButton.Click += (_, _) => ShowNext();
 
         _counterText = new TextBlock { Text = $"{_currentIndex + 1} / {_imArray.Count}", VerticalAlignment = VerticalAlignment.Center, Foreground = Brushes.White, FontWeight = FontWeight.Bold, };
-        _timeText = new TextBlock { Text = _timePerImage > 0 ? FormatTime(_timePerImage) : "", HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Center, Foreground = Brushes.White, FontWeight = FontWeight.Bold, Margin = new Thickness(10, 0, 0, 0)};
+        _timeText = new TextBlock { Text = _timePerImage > 0 ? FormatTime(_timePerImage) : "", HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Center, Foreground = Brushes.White, FontWeight = FontWeight.Bold, Margin = new Thickness(10, 0, 0, 0) };
 
         controlsPanel.Children.Add(prevButton);
         if (_timePerImage > 0) { controlsPanel.Children.Add(_pausePlayButton); }
@@ -155,7 +157,6 @@ public class SessionWindow : BaseWindow
         this.PointerEntered += (_, _) => controlsPanel.IsVisible = true;
         this.PointerExited += (_, _) => controlsPanel.IsVisible = false;
     }
-
     private void UpdateTimer()
     {
         if (_remainingSeconds > 0)
@@ -191,16 +192,25 @@ public class SessionWindow : BaseWindow
     private void TogglePause()
     {
         if (_slideshowTimer!.IsEnabled)
-    {
-        _slideshowTimer.Stop();
-        _pausePlayButton.Content = _playButton;
-    }
-    else
-    {
-        _slideshowTimer.Start();
-        _pausePlayButton.Content =  new Path{ Data = Geometry.Parse("M 0 0 H 4 V 16 H 0 Z M 8 0 H 12 V 16 H 8 Z"), Fill = Brushes.White, Stretch = Stretch.Uniform,
-            Width = 11, Height = 11, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center, Margin= new Thickness(3,0,0,0)};
-    }
+        {
+            _slideshowTimer.Stop();
+            _pausePlayButton.Content = _playButton;
+        }
+        else
+        {
+            _slideshowTimer.Start();
+            _pausePlayButton.Content = new Path
+            {
+                Data = Geometry.Parse("M 0 0 H 4 V 16 H 0 Z M 8 0 H 12 V 16 H 8 Z"),
+                Fill = Brushes.White,
+                Stretch = Stretch.Uniform,
+                Width = 11,
+                Height = 11,
+                VerticalAlignment = VerticalAlignment.Center,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(3, 0, 0, 0)
+            };
+        }
     }
     private static string FormatTime(int seconds)
     {
@@ -217,4 +227,10 @@ public class SessionWindow : BaseWindow
         _slideshowTimer?.Stop();
         mainWindow.Show();
     }
+}
+public enum DialogResult
+{
+    Cancel,
+    Yes,
+    No,
 }

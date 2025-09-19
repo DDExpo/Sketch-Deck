@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,32 +7,21 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using Avalonia.VisualTree;
 
+using DynamicData;
+
+using sketchDeck.CustomAxaml;
+using sketchDeck.Models;
 using sketchDeck.ViewModels;
 
 namespace sketchDeck.Views;
 
 public partial class LeftPanel : UserControl
 {
-    public ObservableCollection<CollectionItem> Collections { get; } = [];
     public LeftPanel()
     {
         InitializeComponent();
-        CollectionsList.ItemsSource = Collections;
-
-        Collections.Add(new CollectionItem { Name = "collection_A", Count = 44 });
-        Collections.Add(new CollectionItem { Name = "collection_B", Count = 55 });
-        Collections.Add(new CollectionItem { Name = "collection_B", Count = 55 });
-        Collections.Add(new CollectionItem { Name = "collection_B", Count = 55 });
-        Collections.Add(new CollectionItem { Name = "collection_B", Count = 55 });
-        Collections.Add(new CollectionItem { Name = "collection_B", Count = 55 });
-        Collections.Add(new CollectionItem { Name = "collection_A", Count = 44 });
-        Collections.Add(new CollectionItem { Name = "collection_B", Count = 55 });
-        Collections.Add(new CollectionItem { Name = "collection_B", Count = 55 });
-        Collections.Add(new CollectionItem { Name = "collection_B", Count = 55 });
-        Collections.Add(new CollectionItem { Name = "collection_B", Count = 55 });
-        Collections.Add(new CollectionItem { Name = "collection_B", Count = 55 });
-
         this.AttachedToVisualTree += async (_, __) =>
         {
             if (DataContext is not LeftPanelViewModel vm) return;
@@ -46,20 +34,21 @@ public partial class LeftPanel : UserControl
             var imagePaths = Directory.EnumerateFiles(@"D:\Workspace\C#\Projects\Sketch-Deck\test_light", "*.*", SearchOption.AllDirectories)
                                       .Where(f => imageExtensions.Contains(Path.GetExtension(f)))
                                       .ToArray();
-            await vm.ImagesLoader(imagePaths);
+            await vm.ImagesLoader(imagePaths, (Window)this.GetVisualRoot()!);
         };
     }
-
+    
     private void StartSessionButton_Clicked(object sender, RoutedEventArgs args)
     {
-        if (DataContext is not LeftPanelViewModel vm) return;
+        if (DataContext is not LeftPanelViewModel vm || vm.Parent.Images == null || vm.Parent.Images.Count == 0) return;
 
         if (!int.TryParse(vm.TimeImage, out int time)) { time = 0; vm.TimeImage = "0"; }
-        if (time > 300000) { time = 300000; vm.TimeImage = "300000"; }
+        if (time > 86400) { time = 86400; vm.TimeImage = "86400"; }
         else if (time < 0) { time = 0; vm.TimeImage = "0"; }
         var session = new SessionWindow(vm.Parent.Images, vm.IsShuffled, time);
         session.Show();
     }
+
     private async void OpenFilesButton_Clicked(object sender, RoutedEventArgs args)
     {
         if (DataContext is not LeftPanelViewModel vm) return;
@@ -78,13 +67,12 @@ public partial class LeftPanel : UserControl
                 }
             ]
         });
-
         var paths = files
             .Select(f => f.TryGetLocalPath())
             .Where(p => p is not null)
             .ToArray()!;
 
-        await vm.ImagesLoader(paths!);
+        await vm.ImagesLoader(paths!, (Window)this.GetVisualRoot()!);
     }
     private async void OpenFolderButton_Clicked(object sender, RoutedEventArgs args)
     {
@@ -100,7 +88,6 @@ public partial class LeftPanel : UserControl
         {
             ".png", ".jpg", ".jpeg"
         };
-
         var paths = new List<string>();
 
         foreach (var folder in folders)
@@ -114,41 +101,76 @@ public partial class LeftPanel : UserControl
                 paths.AddRange(files);
             }
         }
-
-        await vm.ImagesLoader([.. paths]);
+        await vm.ImagesLoader([.. paths], (Window)this.GetVisualRoot()!);
     }
-    private void AlwaysOnTop_Click(object? sender, RoutedEventArgs e)
+    
+    private void OnNameDoubleTapped(object? sender, RoutedEventArgs e)
     {
-        var window = this.VisualRoot as Window;
-        if (window is not null)
+        if (sender is TextBlock tb && tb.DataContext is CollectionItem item) { item.IsEditing = true; }
+    }
+    private void EditTextBox_LostFocus(object? sender, RoutedEventArgs e)
+    {
+        if (sender is TextBox tb && tb.DataContext is CollectionItem item) {item.IsEditing = false;}
+    }
+    private void EditTextBox_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (sender is TextBox tb && tb.DataContext is CollectionItem item)
         {
-            window.Topmost = !window.Topmost;
+            if (e.Key == Key.Enter) { item.IsEditing = false;}
+            else if (e.Key == Key.Escape) {item.IsEditing = false;}
         }
     }
 
-    private void CollectionsList_OnDrop(object? sender, DragEventArgs e)
+    private async void CreateCollection_Click(object? sender, RoutedEventArgs e)
     {
-        if (e.Data.Contains(DataFormats.Text))
+        var window = this.VisualRoot as Window;
+        var dialog = new SaveCollectionWindow();
+        var result = await dialog.ShowDialog<string?>(window!);
+
+        if (result != null)
         {
-            var dropped = e.Data.GetText();
-            if (!string.IsNullOrWhiteSpace(dropped))
+            if (DataContext is LeftPanelViewModel vm)
             {
-                Collections.Add(new CollectionItem { Name = dropped, Count = 1 });
+                vm.SaveCollection(result);
             }
         }
     }
-
-    private void DeleteCollection_Click(object? sender, RoutedEventArgs e)
+    private async void DeleteCollection_Click(object? sender, RoutedEventArgs e)
     {
-        if (sender is Button btn && btn.DataContext is CollectionItem item)
+        Window dialog;
+        if (DataContext is not LeftPanelViewModel vm) return;
+        var btn = (Button)sender!;
+        var item = (CollectionItem)btn.DataContext!;
+
+        if (vm.Parent.Collections.Count < 2)
         {
-            Collections.Remove(item);
+            dialog = new YesNoCancelDialog("", false);
+        } else {
+            dialog = new YesNoCancelDialog(item.Name, true);
+        }
+        var window = this.VisualRoot as Window;
+        var result = await dialog.ShowDialog<DialogResult>(window!);
+
+        switch (result)
+        {
+            case DialogResult.Yes:
+                vm.Parent.Collections.Remove(item);
+                if (vm.Parent.Collections.Count > 0) vm.Parent.SelectedCollection = 0; 
+                item.Dispose();
+                break;
+            case DialogResult.No:
+                vm.Parent.Collections.Remove(item);
+                vm.Parent.Collections[0].CollectionImages.AddRange(item.CollectionImages.Items);
+                vm.Parent.SelectedCollection = 0;
+                break;
+            case DialogResult.Cancel:
+                break;
         }
     }
-}
 
-public class CollectionItem
-{
-    public string Name { get; set; } = "";
-    public int Count { get; set; }
+    private void AlwaysOnTop_Click(object? sender, RoutedEventArgs e)
+    {
+        var window = this.VisualRoot as Window;
+        window!.Topmost = !window.Topmost;
+    }
 }

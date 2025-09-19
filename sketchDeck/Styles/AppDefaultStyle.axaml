@@ -33,9 +33,16 @@
     <Setter Property="Foreground" Value="{DynamicResource Brush.Text}"/>
   </Style>
 
+  <Style Selector="Border.selectable Button.borderDeleteBtn">
+    <Setter Property="Opacity" Value="0"/>
+  </Style>
   <Style Selector="Border.selectable:pointerover">
     <Setter Property="Background" Value="{DynamicResource Brush.Hover}"/>
   </Style>
+  <Style Selector="Border.selectable:pointerover Button.borderDeleteBtn">
+    <Setter Property="Opacity" Value="1"/>
+  </Style>
+  
   <Style Selector="Border.selectable:selected">
     <Setter Property="Background" Value="{DynamicResource Win10.Selection}"/>
     <Setter Property="BorderBrush" Value="#3399FF"/>
@@ -116,18 +123,30 @@
   <Style Selector="ListBoxItem, TreeViewItem">
     <Setter Property="Background" Value="Transparent"/>
     <Setter Property="Foreground" Value="{DynamicResource Brush.Text}"/>
+    <Setter Property="CornerRadius" Value="6"/>
     <Setter Property="Padding" Value="6,3"/>
   </Style>
   <Style Selector="ListBoxItem:pointerover, TreeViewItem:pointerover">
     <Setter Property="Background" Value="{DynamicResource Brush.Hover}"/>
+    <Setter Property="CornerRadius" Value="6"/>
   </Style>
   <Style Selector="ListBoxItem:selected:focus, TreeViewItem:selected:focus">
     <Setter Property="Background" Value="{DynamicResource Brush.Selection}"/>
+    <Setter Property="CornerRadius" Value="6"/>
     <Setter Property="Foreground" Value="White"/>
   </Style>
   <Style Selector="ListBoxItem:selected:unfocused, TreeViewItem:selected:unfocused">
     <Setter Property="Background" Value="{DynamicResource Brush.SelectionInactive}"/>
     <Setter Property="Foreground" Value="{DynamicResource Brush.Text}"/>
+    <Setter Property="CornerRadius" Value="6"/>
   </Style>
-
+  <Style Selector="ListBoxItem Button.CollectionDeleteBtn">
+    <Setter Property="IsVisible" Value="False"/>
+  </Style>
+  <Style Selector="ListBoxItem:selected:focus Button.CollectionDeleteBtn">
+    <Setter Property="IsVisible" Value="True"/>
+  </Style>
+  <Style Selector="ListBoxItem:selected:unfocused Button.CollectionDeleteBtn">
+    <Setter Property="IsVisible" Value="True"/>
+  </Style>
 </Styles>

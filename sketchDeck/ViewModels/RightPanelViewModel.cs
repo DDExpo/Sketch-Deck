@@ -1,6 +1,7 @@
 using System;
+using System.Globalization;
 using System.IO;
-
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Data.Converters;
@@ -9,6 +10,7 @@ using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 
 using CommunityToolkit.Mvvm.ComponentModel;
+using PhotoSauce.MagicScaler;
 using sketchDeck.Models;
 
 namespace sketchDeck.ViewModels;
@@ -19,16 +21,38 @@ public partial class RightPanelViewModel(MainWindowViewModel parent) : Observabl
 }
 public class ThumbnailConverter : IValueConverter
 {
-    public object? Convert(object? value, Type targetType, object? parameter, System.Globalization.CultureInfo culture)
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (value is string path && File.Exists(path))
         {
+            if (parameter != null && int.TryParse(parameter.ToString(), out int size))
+            {
+                Console.WriteLine(size);
+                Console.WriteLine(1);
+                return ConvertAsync(path, size);
+            }
             return new Bitmap(path);
         }
         return null;
     }
-    public object? ConvertBack(object? value, Type targetType, object? parameter, System.Globalization.CultureInfo culture) 
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         => throw new NotSupportedException();
+
+    public static async Task<Bitmap> ConvertAsync(string path, int size)
+    {
+        using var inStream = File.OpenRead(path);
+        using var outStream = new MemoryStream();
+
+        await Task.Run(() =>
+            MagicImageProcessor.ProcessImage(inStream, outStream, new ProcessImageSettings
+            {
+                Width = size,
+                ResizeMode = CropScaleMode.Max
+            }));
+
+        outStream.Position = 0;
+        return new Bitmap(outStream);
+    }
 }
 public class PreviewWindow : BaseWindow
 {

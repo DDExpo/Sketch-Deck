@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -41,32 +42,30 @@ public partial class ImageItem : ObservableObject
             Type = string.IsNullOrEmpty(info.Extension) ? "File" : info.Extension.Trim('.').ToUpper(),
             Size = info.Length,
             DateModified = info.LastWriteTime,
-            Thumbnail = await ThumbnailCache.LoadOrCreateThumbnailAsync(path)
+            Thumbnail = await ThumbnailCache.LoadOrCreateThumbnailAsync(path, $"|{info.Length}|{info.LastWriteTimeUtc:O}")
         };
 
+        ThumbnailRefs.AddReference(item.Thumbnail);
         return item;
     }
     public static class ThumbnailCache
     {
         private static readonly string exeDir = AppContext.BaseDirectory;
         private static readonly string CacheDir = Path.Combine(exeDir, "bin", "thumbs");
-        static ThumbnailCache()
-        {
-            Directory.CreateDirectory(CacheDir);
-        }
-        private static string GetCachePath(string filePath)
+        static ThumbnailCache() {Directory.CreateDirectory(CacheDir); }
+        private static string GetCachePath(string filePathDate)
         {
             long hash = 1469598103934665603L;
-            foreach (var c in filePath)
+            foreach (var c in filePathDate)
             {
                 hash = (hash ^ c) * 1099511628211;
             }
             return Path.Combine(CacheDir, hash + ".png");
         }
-        
-        public static async Task<string> LoadOrCreateThumbnailAsync(string filePath)
+
+        public static async Task<string> LoadOrCreateThumbnailAsync(string filePath, string uniqueData)
         {
-            var cachePath = GetCachePath(filePath);
+            var cachePath = GetCachePath(filePath+uniqueData);
 
             if (File.Exists(cachePath))
                 return cachePath;
@@ -74,9 +73,36 @@ public partial class ImageItem : ObservableObject
             using var stream = File.OpenRead(filePath);
             using var outputStream = File.Create(cachePath);
 
-            await Task.Run(() => MagicImageProcessor.ProcessImage(stream, outputStream, new ProcessImageSettings { Width = 512 }));
+            await Task.Run(() => MagicImageProcessor.ProcessImage(stream, outputStream, new ProcessImageSettings { Width = 512, }));
 
             return cachePath;
+        }
+    }
+}
+public static class ThumbnailRefs
+{
+    private static Dictionary<string, int> ReferencesThumbnails { get; set; } = [];
+    public static void AddReference(string thumbnailPath)
+    {
+        if (ReferencesThumbnails.TryGetValue(thumbnailPath, out int value))
+            ReferencesThumbnails[thumbnailPath] = ++value;
+        else
+            ReferencesThumbnails[thumbnailPath] = 1;
+    }
+    public static void ReleaseReference(string thumbnailPath)
+    {
+        if (ReferencesThumbnails.TryGetValue(thumbnailPath, out var count))
+        {
+            count--;
+            if (count <= 0)
+            {
+                ReferencesThumbnails.Remove(thumbnailPath);
+                File.Delete(thumbnailPath);
+            }
+            else
+            {
+                ReferencesThumbnails[thumbnailPath] = count;
+            }
         }
     }
 }

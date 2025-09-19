@@ -1,0 +1,27 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:sketchDeck.CustomAxaml"
+        Width="410" Height="100"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        Title="Confirm"
+        x:Class="sketchDeck.CustomAxaml.YesNoCancelDialog"
+        x:DataType="local:YesNoCancelDialog">
+    <StackPanel Margin="16" Spacing="12">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="2">
+            <TextBlock Text="{Binding MessagePrefix}" FontSize="14"/>
+            <TextBlock Text="{Binding ItemName}"
+                    FontWeight="Bold"
+                    FontSize="14"
+                    TextTrimming="CharacterEllipsis"
+                    TextWrapping="NoWrap"
+                    MaxWidth="60"/>
+            <TextBlock Text="{Binding MessageSuffix}" FontSize="14"/>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="16">
+            <Button x:Name="YesButton" Content="Yes" Width="70" Click="Yes_Click" HorizontalContentAlignment="Center"/>
+            <Button x:Name="NoButton" Content="No" Width="70" Click="No_Click" HorizontalContentAlignment="Center"/>
+            <Button x:Name="CancelButton" Content="Cancel" Width="70" Click="Cancel_Click" HorizontalContentAlignment="Center"/>
+        </StackPanel>
+    </StackPanel>
+</Window>

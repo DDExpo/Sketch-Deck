@@ -8,13 +8,13 @@
 
     <UserControl.Resources>
         <DataTemplate x:Key="DetailsTemplate" x:DataType="vm:RightPanelViewModel">
-            <DataGrid ItemsSource="{Binding Parent.Images}" Sorting="OnSorting" AutoGenerateColumns="False" HeadersVisibility="Column" CanUserResizeColumns="True" IsReadOnly="True">
+            <DataGrid ItemsSource="{Binding Parent.Images}" Sorting="OnSorting" SelectionMode="Extended" AutoGenerateColumns="False" HeadersVisibility="Column" CanUserResizeColumns="True" IsReadOnly="True" Margin="0,0,15,0">
                 <DataGrid.Columns>
                     <DataGridTemplateColumn Width="64">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel DoubleTapped="OnImageDoubleTapped">
-                                    <Image Source="{Binding Thumbnail, Converter={StaticResource ThumbnailConverter}}" Width="48" Height="48" Margin="10"/>
+                                    <Image Source="{Binding Thumbnail, Converter={StaticResource ThumbnailConverter}, ConverterParameter=48}" Width="48" Height="48" Margin="10"/>
                                 </StackPanel>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
@@ -22,7 +22,18 @@
                     <DataGridTextColumn Header="Name" Binding="{Binding Name}" SortMemberPath="Name" Width="96"/>
                     <DataGridTextColumn Header="Type" Binding="{Binding Type}" SortMemberPath="Type" Width="72"/>
                     <DataGridTextColumn Header="Size" Binding="{Binding SizeDisplay}" SortMemberPath="Size" Width="84"/>
-                    <DataGridTextColumn Header="Date" Binding="{Binding DateModified}" SortMemberPath="DateModified" Width="184"/>
+                    <DataGridTextColumn Header="Date" Binding="{Binding DateModified}" SortMemberPath="DateModified" Width="*"/>
+                    <DataGridTemplateColumn Width="66" CanUserResize="False"> 
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center" CornerRadius="6" BorderBrush="White" Background="#000000" BorderThickness="1"
+                                        Click="DeleteItem_Click">
+                                    <Path Data="M-4-1 6 9M-4 9 6-1" Stroke="White" StrokeThickness="1.3" />
+                                </Button>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                
                 </DataGrid.Columns>
             </DataGrid>
         </DataTemplate>
@@ -31,19 +42,25 @@
             <ScrollViewer>
                 <ir:ItemsRepeater ItemsSource="{Binding Parent.Images}">
                     <ir:ItemsRepeater.Layout>
-                        <UniformGridLayout Orientation="Horizontal"
-                                           MinColumnSpacing="10"
-                                           MinRowSpacing="10"
-                                           MinItemWidth="128"
-                                           MinItemHeight="148"/>
+                        <UniformGridLayout Orientation="Horizontal" MinColumnSpacing="5" MinRowSpacing="15" MinItemWidth="128" MinItemHeight="148"/>
                     </ir:ItemsRepeater.Layout>
                     <ir:ItemsRepeater.ItemTemplate>
                         <DataTemplate>
-                            <StackPanel DoubleTapped="OnImageDoubleTapped">
-                                <Image Source="{Binding Thumbnail, Converter={StaticResource ThumbnailConverter}}"
-                                       Width="128" Height="128"/>
-                                <TextBlock Text="{Binding Name}" Margin="0,4,0,0"/>
-                            </StackPanel>
+                            <Border Classes="selectable" Padding="4" CornerRadius="6">
+                                <Grid>
+                                    <StackPanel DoubleTapped="OnImageDoubleTapped">
+                                        <Image Source="{Binding Thumbnail, Converter={StaticResource ThumbnailConverter}, ConverterParameter=128}"
+                                            Width="128" Height="128"/>
+                                        <TextBlock Text="{Binding Name}" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                    
+                                    <Button Classes="borderDeleteBtn" Width="20" Height="20" HorizontalAlignment="Right" VerticalAlignment="Top"
+                                            BorderBrush="White" Background="#000000" BorderThickness="1" CornerRadius="6" Margin="0"
+                                            Click="DeleteItem_Click">
+                                        <Path Data="M-4-1 6 9M-4 9 6-1" Stroke="White" StrokeThickness="1.3" />
+                                    </Button>
+                                </Grid>
+                            </Border>
                         </DataTemplate>
                     </ir:ItemsRepeater.ItemTemplate>
                 </ir:ItemsRepeater>
@@ -54,19 +71,25 @@
             <ScrollViewer>
                 <ir:ItemsRepeater ItemsSource="{Binding Parent.Images}">
                     <ir:ItemsRepeater.Layout>
-                        <UniformGridLayout Orientation="Horizontal"
-                                           MinColumnSpacing="10"
-                                           MinRowSpacing="10"
-                                           MinItemWidth="276"
-                                           MinItemHeight="296"/>
+                        <UniformGridLayout Orientation="Horizontal" MinColumnSpacing="6" MinRowSpacing="15" MinItemWidth="256" MinItemHeight="276"/>
                     </ir:ItemsRepeater.Layout>
                     <ir:ItemsRepeater.ItemTemplate>
                         <DataTemplate>
-                            <StackPanel DoubleTapped="OnImageDoubleTapped">
-                                <Image Source="{Binding Thumbnail, Converter={StaticResource ThumbnailConverter}}"
-                                       Width="256" Height="256"/>
-                                <TextBlock Text="{Binding Name}" Margin="0,4,0,0"/>
-                            </StackPanel>
+                            <Border Classes="selectable" Padding="4" CornerRadius="6">
+                                <Grid>
+                                    <StackPanel DoubleTapped="OnImageDoubleTapped">
+                                        <Image Source="{Binding Thumbnail, Converter={StaticResource ThumbnailConverter}, ConverterParameter=236}"
+                                            Width="236" Height="256"/>
+                                        <TextBlock Text="{Binding Name}" Margin="0,4,0,0"/>
+                                    </StackPanel>
+
+                                    <Button Classes="borderDeleteBtn" Width="20" Height="20" HorizontalAlignment="Right" VerticalAlignment="Top"
+                                            BorderBrush="White" Background="#000000" BorderThickness="1" CornerRadius="6" Margin="0"
+                                            Click="DeleteItem_Click">
+                                        <Path Data="M-4-1 6 9M-4 9 6-1" Stroke="White" StrokeThickness="1.3" />
+                                    </Button>
+                                </Grid>
+                            </Border>
                         </DataTemplate>
                     </ir:ItemsRepeater.ItemTemplate>
                 </ir:ItemsRepeater>
@@ -77,19 +100,25 @@
             <ScrollViewer>
                 <ir:ItemsRepeater ItemsSource="{Binding Parent.Images}">
                     <ir:ItemsRepeater.Layout>
-                        <UniformGridLayout Orientation="Horizontal"
-                                           MinColumnSpacing="10"
-                                           MinRowSpacing="10"
-                                           MinItemWidth="376"
-                                           MinItemHeight="396"/>
+                        <UniformGridLayout Orientation="Horizontal" MinColumnSpacing="10" MinRowSpacing="10" MinItemWidth="376" MinItemHeight="396"/>
                     </ir:ItemsRepeater.Layout>
                     <ir:ItemsRepeater.ItemTemplate>
                         <DataTemplate>
-                            <StackPanel DoubleTapped="OnImageDoubleTapped">
-                                <Image Source="{Binding Thumbnail, Converter={StaticResource ThumbnailConverter}}"
-                                       Width="356" Height="356"/>
-                                <TextBlock Text="{Binding Name}" Margin="0,4,0,0"/>
-                            </StackPanel>
+                            <Border Classes="selectable" Padding="4" CornerRadius="6" >
+                                
+                                <Grid>
+                                    <StackPanel DoubleTapped="OnImageDoubleTapped">
+                                        <Image Source="{Binding Thumbnail, Converter={StaticResource ThumbnailConverter}}"
+                                            Width="356" Height="356"/>
+                                        <TextBlock Text="{Binding Name}" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                    <Button Classes="borderDeleteBtn" Width="24" Height="24" HorizontalAlignment="Right" VerticalAlignment="Top"
+                                            BorderBrush="White" Background="#000000" BorderThickness="1.3" CornerRadius="6" Margin="2"
+                                            Click="DeleteItem_Click">
+                                        <Path Data="M10.5-1.5l-15 15m15 0-15-15" Stroke="White" StrokeThickness="1.5" />
+                                    </Button>
+                                </Grid>
+                            </Border>
                         </DataTemplate>
                     </ir:ItemsRepeater.ItemTemplate>
                 </ir:ItemsRepeater>
@@ -100,20 +129,25 @@
             <ScrollViewer>
                 <ir:ItemsRepeater ItemsSource="{Binding Parent.Images}">
                     <ir:ItemsRepeater.Layout>
-                        <UniformGridLayout Orientation="Horizontal"
-                                        MinColumnSpacing="10"
-                                        MinRowSpacing="10"
-                                        MinItemWidth="532"
-                                        MinItemHeight="552"/>
+                        <UniformGridLayout Orientation="Horizontal" MinColumnSpacing="10" MinRowSpacing="10" MinItemWidth="522" MinItemHeight="542"/>
                     </ir:ItemsRepeater.Layout>
                     <ir:ItemsRepeater.ItemTemplate>
                         <DataTemplate>
-                            <Border Classes="selectable" Margin="2" Padding="4" CornerRadius="4" PointerPressed="OnItemPointerPressed">
-                                <StackPanel DoubleTapped="OnImageDoubleTapped">
-                                    <Image Source="{Binding Thumbnail, Converter={StaticResource ThumbnailConverter}}"
-                                        Width="512" Height="512"/>
-                                    <TextBlock Text="{Binding Name}" Margin="0,4,0,0"/>
-                                </StackPanel>
+                            <Border Classes="selectable" Padding="4" CornerRadius="6">
+                                <Grid>
+                                    <StackPanel DoubleTapped="OnImageDoubleTapped">
+                                        <Image Source="{Binding Thumbnail, Converter={StaticResource ThumbnailConverter}}"
+                                            Width="502" Height="502"/>
+                                        <TextBlock Text="{Binding Name}" Margin="0,4,0,0"/>
+                                    </StackPanel>
+
+                                    <Button Classes="borderDeleteBtn" Width="24" Height="24" HorizontalAlignment="Right" VerticalAlignment="Top"
+                                            BorderBrush="White" BorderThickness="1.3" Background="#000000" CornerRadius="6" Margin="2"
+                                            Click="DeleteItem_Click">
+                                        <Path Data="M10.5-1.5l-15 15m15 0-15-15" Stroke="White" StrokeThickness="1.5" />
+                                    
+                                    </Button>
+                                </Grid>
                             </Border>
                         </DataTemplate>
                     </ir:ItemsRepeater.ItemTemplate>
@@ -130,13 +164,12 @@
         <conv:ThumbnailConverter x:Key="ThumbnailConverter" />
     </UserControl.Resources>
 
-    <Grid RowDefinitions="Auto,Auto,*" Background="#1E1E1E">
-        <ContentControl x:Name="ContentHost" Margin="15,15,15,15" Grid.Row="2" Content="{Binding}"
+    <Grid RowDefinitions="Auto,Auto,*">
+        <ContentControl x:Name="ContentHost" Margin="0,15,0,10" Grid.Row="2" Content="{Binding}"
                         ContentTemplate="{Binding Parent.SelectedView, Converter={StaticResource ViewToTemplateConverter}}"/>
         <Canvas Grid.Row="2" IsHitTestVisible="False"
                 x:Name="OverlayCanvas"  Background="Transparent">
-            <Rectangle x:Name="SelectionRect" Stroke="Blue" StrokeThickness="1"
-                        Fill="#400000FF" IsVisible="False"/>
+            <Rectangle x:Name="SelectionRect" Stroke="Blue" StrokeThickness="1" IsVisible="False"/>
         </Canvas>
     </Grid>
 </UserControl>

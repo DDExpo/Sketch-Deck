@@ -1,11 +1,13 @@
-using System;
 using System.ComponentModel;
-using System.Linq;
-
+using System.IO;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Data;
 using Avalonia.Input;
-
+using Avalonia.Interactivity;
+using Avalonia.VisualTree;
+using DynamicData;
+using sketchDeck.CustomAxaml;
 using sketchDeck.Models;
 using sketchDeck.ViewModels;
 
@@ -32,65 +34,88 @@ public partial class RightPanel : UserControl
     {
         if (e.Column is not DataGridBoundColumn column) return;
         if (DataContext is not RightPanelViewModel vm) return;
+        if (vm.Parent.SelectedCollection is null) return;
 
+        var collection = vm.Parent.Collections[vm.Parent.SelectedCollection.Value];
         var sortBy = column.SortMemberPath ?? (column.Binding as Binding)?.Path;
         if (string.IsNullOrEmpty(sortBy)) return;
 
-        var newDirecation = vm.Parent.SortDirection == ListSortDirection.Ascending && vm.Parent.SortBy == sortBy
-            ? ListSortDirection.Descending
-            : ListSortDirection.Ascending;
+        var newDirection =
+            collection.SortBy == sortBy && collection.SortDirection == ListSortDirection.Ascending
+                ? ListSortDirection.Descending
+                : ListSortDirection.Ascending;
 
-        vm.Parent.UpdateSort(sortBy, newDirecation);
+        collection.SortBy = sortBy;
+        collection.SortDirection = newDirection;
 
         e.Handled = true;
     }
-    private void OnImageDoubleTapped(object sender, TappedEventArgs args)
+    private async void OnImageDoubleTapped(object sender, TappedEventArgs args)
     {
-        if (sender is Control control && control.DataContext is ImageItem item)
+        if (sender is not Control { DataContext: ImageItem item })  return;
+
+        if (!File.Exists(item.PathImage))
         {
-            new PreviewWindow(item).Show();
+            var dialog = new FileMissingDialog(item.PathImage);
+            var result = await dialog.ShowDialog<FileMissingResult>((Window)this.GetVisualRoot()!);
+
+            if (result == FileMissingResult.SetNewPath && dialog.NewPath is not null) { item.PathImage = dialog.NewPath; }
+            else if (result == FileMissingResult.None) { return; }
+        }
+
+        new PreviewWindow(item).Show();
+    }
+    private void DeleteItem_Click(object? sender, RoutedEventArgs e)
+    {
+        var btn = (Button)sender!;
+        var item = (ImageItem)btn.DataContext!;
+
+        ThumbnailRefs.ReleaseReference(item.Thumbnail);
+
+        if (DataContext is RightPanelViewModel vm)
+        {
+            vm.Parent.Collections[vm.Parent.SelectedCollection!.Value].CollectionImages.Remove(item);
         }
     }
-    private void OnItemPointerPressed(object? sender, PointerPressedEventArgs e)
-    {
-        if (sender is Border border && border.DataContext is ImageItem item)
-        {
-            if (DataContext is not RightPanelViewModel vm) return;
+    // private void OnItemPointerPressed(object? sender, PointerPressedEventArgs e)
+    // {
+    //     if (sender is Border border && border.DataContext is ImageItem item)
+    //     {
+    //         if (DataContext is not RightPanelViewModel vm) return;
 
-            bool ctrl = (e.KeyModifiers & KeyModifiers.Control) != 0;
-            bool shift = (e.KeyModifiers & KeyModifiers.Shift) != 0;
+    //         bool ctrl = (e.KeyModifiers & KeyModifiers.Control) != 0;
+    //         bool shift = (e.KeyModifiers & KeyModifiers.Shift) != 0;
 
-            if (!ctrl && !shift)
-            {
-                foreach (var img in vm.Parent.Images)
-                    img.IsSelected = false;
+    //         if (!ctrl && !shift)
+    //         {
+    //             foreach (var img in vm.Parent.Images)
+    //                 img.IsSelected = false;
 
-                item.IsSelected = true;
-            }
-            else if (ctrl)
-            {
-                item.IsSelected = !item.IsSelected;
-            }
-            else if (shift)
-            {
-                var list = vm.Parent.Images.ToList();
-                int lastIndex = list.FindIndex(x => x.IsSelected);
-                int thisIndex = list.IndexOf(item);
+    //             item.IsSelected = true;
+    //         }
+    //         else if (ctrl)
+    //         {
+    //             item.IsSelected = !item.IsSelected;
+    //         }
+    //         else if (shift)
+    //         {
+    //             var list = vm.Parent.Images.ToList();
+    //             int lastIndex = list.FindIndex(x => x.IsSelected);
+    //             int thisIndex = list.IndexOf(item);
 
-                if (lastIndex >= 0)
-                {
-                    int start = Math.Min(lastIndex, thisIndex);
-                    int end = Math.Max(lastIndex, thisIndex);
-                    for (int i = start; i <= end; i++)
-                        list[i].IsSelected = true;
-                }
-                else
-                {
-                    item.IsSelected = true;
-                }
-            }
-        }
-    }
+    //             if (lastIndex >= 0)
+    //             {
+    //                 int start = Math.Min(lastIndex, thisIndex);
+    //                 int end = Math.Max(lastIndex, thisIndex);
+    //                 for (int i = start; i <= end; i++)
+    //                     list[i].IsSelected = true;
+    //             }
+    //             else
+    //             {
+    //                 item.IsSelected = true;
+    //             }
+    //         }
+    //     }
     // private void OnOverlayPointerPressed(object? sender, PointerPressedEventArgs e)
     // {
     //     if (e.GetCurrentPoint(OverlayCanvas).Properties.IsLeftButtonPressed)
