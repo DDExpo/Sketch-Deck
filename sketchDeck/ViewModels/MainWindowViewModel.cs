@@ -1,6 +1,7 @@
-﻿using System;
+﻿#define WINDOWS
+
+using System;
 using System.ComponentModel;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Reactive.Linq;
@@ -8,9 +9,11 @@ using System.Reactive.Subjects;
 
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Shapes;
 using Avalonia.Controls.PanAndZoom;
 using Avalonia.Input;
 using Avalonia.Layout;
+using Avalonia.Threading;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 
@@ -21,9 +24,11 @@ using ReactiveUI;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 
+using sketchDeck.GlobalHooks;
 using sketchDeck.Models;
-using sketchDeck.CustomAxaml;
-using System.Threading.Tasks;
+using Avalonia.VisualTree;
+using System.Linq;
+using Avalonia.Controls.Primitives;
 
 namespace sketchDeck.ViewModels;
 
@@ -77,7 +82,6 @@ public partial class MainWindowViewModel : ObservableObject
         else
             _activeCollection.OnNext(null);
     }
-
     private static SortExpressionComparer<ImageItem> GetComparer(string sortBy, ListSortDirection dir)
     {
         var asc = dir == ListSortDirection.Ascending;
@@ -110,10 +114,13 @@ public class BaseWindow : Window
     protected readonly ZoomBorder PanAndZoomBorder;
     protected readonly Image Picture;
     protected readonly MenuItem AlwaysOnTopItem;
-    protected readonly ColorPicker PickerColor;
+    public readonly ColorPicker PickerColor;
     protected readonly Grid LayoutGrid = new();
     private readonly TextBlock _missingFileText;
-    private ScreenPipette? _pipette;
+    private Ellipse? _pipettPreview;
+    private DispatcherTimer? _pipettTimer;
+    private MouseKeyboardHook? _mouseKeyboardHook;
+    private Color _currentColor;
     public BaseWindow()
     {
         Width = 800;
@@ -122,14 +129,14 @@ public class BaseWindow : Window
 
         Picture = new Image { Stretch = Stretch.Uniform };
 
-         _missingFileText = new TextBlock
+        _missingFileText = new TextBlock
         {
             Foreground = Brushes.White,
             FontWeight = FontWeight.Bold,
             TextAlignment = TextAlignment.Center,
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(20), 
+            Margin = new Thickness(20),
             IsHitTestVisible = false,
             Text = ""
         };
@@ -167,39 +174,77 @@ public class BaseWindow : Window
         var pickerPanel = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(4, 2), Spacing = 28 };
         PickerColor = new ColorPicker { Width = 125, Height = 25, Margin = new Thickness(0), VerticalAlignment = VerticalAlignment.Center };
 
-        var dropperButton = new Button { Width = 25, Height = 25, Padding = new Thickness(0), CornerRadius = new CornerRadius(6), VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center };
+        var pipettButton = new Button { Width = 25, Height = 25, Padding = new Thickness(0), CornerRadius = new CornerRadius(6), VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center };
         var canvas = new Canvas { Width = 15, Height = 15, };
         var pathSVG = new Avalonia.Controls.Shapes.Path { Stroke = Brushes.White, StrokeThickness = 1.3, StrokeLineCap = PenLineCap.Round, StrokeJoin = PenLineJoin.Round, Data = Geometry.Parse("M12.401 5.568l-.743 1.3 3.6187 2.1855L16.859 6.538c.6035-.9993.2827-2.2986-.8713-2.7358-.9993-.6035-2.5967-.5462-3.592 1.775ZM10 5.9A1.05 1.05 0 009.2 7.8l6.916 4.187a1.05 1.05 0 00.805-1.94L10 5.9Zm.5566 2.7241-4.6613 7.718c-.3427.5673-.482 1.2344-.3952 1.8915l.1337 1.0116c.1024.7745.7319 1.3722 1.5106 1.4344.6255.0499 1.2256-.2578 1.55-.795l5.4809-9.075-3.6187-2.1855Z") };
         Canvas.SetLeft(pathSVG, -4);
         Canvas.SetTop(pathSVG, -4);
         canvas.Children.Add(pathSVG);
 
-        dropperButton.Content = canvas;
-        dropperButton.Click += DropperButton_Click;
+        pipettButton.Content = canvas;
+        pipettButton.Click += (_, __) => { StartPipett(); PanAndZoomBorder.ContextMenu!.Close(); };
         pickerPanel.Children.Add(PickerColor);
-        pickerPanel.Children.Add(dropperButton);
+        pickerPanel.Children.Add(pipettButton);
 
         var contextMenu = new ContextMenu();
         contextMenu.Items.Add(AlwaysOnTopItem);
         contextMenu.Items.Add(pickerPanel);
 
-        var btn = new Button { Width = 25, Height = 25, Padding = new Thickness(0), CornerRadius = new CornerRadius(6), VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center };
-        btn.Click += StopPipetteButton_Click;
-        contextMenu.Items.Add(btn);
         PanAndZoomBorder.ContextMenu = contextMenu;
-    }
-
-    private void DropperButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
-    {
-        _pipette = new ScreenPipette(PickerColor.Background!);
-        LayoutGrid.Children.Add(_pipette.GetPreviewBorder());
-        _pipette.Start();
 
     }
-    private void StopPipetteButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    public void StartPipett()
     {
-        _pipette?.Stop();
-        PickerColor.Background = _pipette?.GetCurrentBrush();
+        if (_pipettPreview != null) return;
+#if WINDOWS
+        _mouseKeyboardHook = new MouseKeyboardHook();
+        _mouseKeyboardHook.LeftClick += () => { PickerColor.Color = _currentColor;};
+        _mouseKeyboardHook.MiddleClick += StopPipett;
+        _mouseKeyboardHook.EnterPressed += StopPipett;
+        _mouseKeyboardHook.EscPressed += StopPipett;
+#else
+        Console.WriteLine("Pipett not implemented on this platform");
+#endif
+        _pipettPreview = new Ellipse
+        {
+            Width = 50,
+            Height = 50,
+            Margin = new Thickness(5),
+            Stroke = Brushes.DarkGray,
+            StrokeThickness = 2,
+            Fill = Brushes.Transparent,
+            HorizontalAlignment = HorizontalAlignment.Right,
+            VerticalAlignment = VerticalAlignment.Bottom,
+        };
+
+        LayoutGrid.Children.Add(_pipettPreview);
+
+        _pipettTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(25) };
+        _pipettTimer.Tick += (_, __) => UpdatePipett();
+        _pipettTimer.Start();
+    }
+
+    private void UpdatePipett()
+    {
+        if (_mouseKeyboardHook == null || _pipettPreview == null) return;
+
+        var (x, y) = _mouseKeyboardHook.GetCursorPosition();
+        var (r, g, b) = _mouseKeyboardHook.GetPixelColor(x, y);
+        _currentColor = Color.FromRgb(r, g, b);
+        _pipettPreview.Fill = new SolidColorBrush(_currentColor);
+    }
+    public void StopPipett()
+    {
+        _pipettTimer?.Stop();
+        _pipettTimer = null;
+
+        if (_pipettPreview != null)
+        {
+            LayoutGrid.Children.Remove(_pipettPreview);
+            _pipettPreview = null;
+        }
+        _mouseKeyboardHook?.Dispose();
+        _mouseKeyboardHook = null;
     }
     protected void LoadImage(string path, IBrush color)
     {
@@ -210,7 +255,7 @@ public class BaseWindow : Window
         {
             using var stream = File.OpenRead(path);
             Picture.Source = new Bitmap(stream);
-            _missingFileText.Text = ""; 
+            _missingFileText.Text = "";
             PanAndZoomBorder.Background = color;
             PickerColor.Color = (color as SolidColorBrush)?.Color ?? Colors.Gray;
         }
@@ -239,5 +284,10 @@ public class BaseWindow : Window
         }
         else if (e.Key == Key.Escape)
             this.Close();
+    }
+    protected override void OnClosed(EventArgs e)
+    {
+        base.OnClosed(e);
+        StopPipett();
     }
 }

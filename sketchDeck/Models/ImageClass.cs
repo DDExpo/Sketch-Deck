@@ -14,12 +14,12 @@ namespace sketchDeck.Models;
 public partial class ImageItem : ObservableObject
 {
     public string PathImage { get; set; } = string.Empty;
-    public string Name { get; set; } = string.Empty;
+    [ObservableProperty] private string _name = string.Empty;
     public string Type { get; set; } = string.Empty;
     public string Thumbnail { get; set; } = string.Empty;
     public IBrush BgColor { get; set; } = Brushes.Gray;
-    [ObservableProperty]
-    public bool _isSelected;
+    [ObservableProperty] private bool _isEditing = false;
+    [ObservableProperty] private bool _isSelected;
     public DateTime DateModified { get; set; }
     public long Size { get; set; }
     public string SizeDisplay =>

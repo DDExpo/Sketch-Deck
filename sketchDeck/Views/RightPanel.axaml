@@ -8,18 +8,27 @@
 
     <UserControl.Resources>
         <DataTemplate x:Key="DetailsTemplate" x:DataType="vm:RightPanelViewModel">
-            <DataGrid ItemsSource="{Binding Parent.Images}" Sorting="OnSorting" SelectionMode="Extended" AutoGenerateColumns="False" HeadersVisibility="Column" CanUserResizeColumns="True" IsReadOnly="True" Margin="0,0,15,0">
+            <DataGrid ItemsSource="{Binding Parent.Images}" Sorting="OnSorting" SelectionMode="Extended" AutoGenerateColumns="False" HeadersVisibility="Column" CanUserResizeColumns="True" IsReadOnly="True" Margin="0,0,10,0">
                 <DataGrid.Columns>
                     <DataGridTemplateColumn Width="64">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel DoubleTapped="OnImageDoubleTapped">
-                                    <Image Source="{Binding Thumbnail, Converter={StaticResource ThumbnailConverter}, ConverterParameter=48}" Width="48" Height="48" Margin="10"/>
+                                    <Image Source="{Binding Thumbnail, Converter={StaticResource ThumbnailConverter}, ConverterParameter=64}" Width="48" Height="48" Margin="8"/>
                                 </StackPanel>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" SortMemberPath="Name" Width="96"/>
+                    <DataGridTemplateColumn Header="Name" Width="96" SortMemberPath="Name">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel VerticalAlignment="Center" Margin="4,0,4,0">
+                                    <TextBlock Text="{Binding Name}" DoubleTapped="OnTextBlockDoubleTapped" IsVisible="{Binding !IsEditing}"/>
+                                    <TextBox Text="{Binding Name, Mode=TwoWay}" IsVisible="{Binding IsEditing}" KeyDown="EditTextBox_KeyDown" LostFocus="EditTextBox_LostFocus"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
                     <DataGridTextColumn Header="Type" Binding="{Binding Type}" SortMemberPath="Type" Width="72"/>
                     <DataGridTextColumn Header="Size" Binding="{Binding SizeDisplay}" SortMemberPath="Size" Width="84"/>
                     <DataGridTextColumn Header="Date" Binding="{Binding DateModified}" SortMemberPath="DateModified" Width="*"/>
@@ -33,25 +42,33 @@
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-                
                 </DataGrid.Columns>
+                <DataGrid.Styles>
+                    <Style Selector="DataGridCell:focus /template/ Grid#FocusVisual">
+                        <Setter Property="IsVisible" Value="False"/>
+                    </Style>
+                    <Style Selector="DataGridCell:current /template/ Rectangle#CurrencyVisual">
+                        <Setter Property="IsVisible" Value="False"/>
+                    </Style>
+                </DataGrid.Styles>
             </DataGrid>
         </DataTemplate>
         
         <DataTemplate x:Key="SmallTemplate" x:DataType="vm:RightPanelViewModel">
-            <ScrollViewer>
+           <ScrollViewer x:Name="ImagesScrollViewer" ScrollChanged="ScrollViewer_ScrollChanged" AttachedToVisualTree="OnScrollViewerAttached">
                 <ir:ItemsRepeater ItemsSource="{Binding Parent.Images}">
                     <ir:ItemsRepeater.Layout>
-                        <UniformGridLayout Orientation="Horizontal" MinColumnSpacing="5" MinRowSpacing="15" MinItemWidth="128" MinItemHeight="148"/>
+                        <UniformGridLayout Orientation="Horizontal" MinColumnSpacing="10" MinRowSpacing="15" MinItemWidth="128" MinItemHeight="158"/>
                     </ir:ItemsRepeater.Layout>
                     <ir:ItemsRepeater.ItemTemplate>
                         <DataTemplate>
                             <Border Classes="selectable" Padding="4" CornerRadius="6">
                                 <Grid>
-                                    <StackPanel DoubleTapped="OnImageDoubleTapped">
-                                        <Image Source="{Binding Thumbnail, Converter={StaticResource ThumbnailConverter}, ConverterParameter=128}"
-                                            Width="128" Height="128"/>
-                                        <TextBlock Text="{Binding Name}" Margin="0,4,0,0"/>
+                                    <StackPanel Margin="0,4,0,0">
+                                        <Image Source="{Binding Thumbnail, Converter={StaticResource ThumbnailConverter}, ConverterParameter=128}" DoubleTapped="OnImageDoubleTapped"
+                                               Width="128" Height="128"/>
+                                        <TextBlock Text="{Binding Name}" DoubleTapped="OnTextBlockDoubleTapped" IsVisible="{Binding !IsEditing}"/>
+                                        <TextBox Text="{Binding Name, Mode=TwoWay}" IsVisible="{Binding IsEditing}" KeyDown="EditTextBox_KeyDown" LostFocus="EditTextBox_LostFocus"/>
                                     </StackPanel>
                                     
                                     <Button Classes="borderDeleteBtn" Width="20" Height="20" HorizontalAlignment="Right" VerticalAlignment="Top"
@@ -68,19 +85,20 @@
         </DataTemplate>
 
         <DataTemplate x:Key="MediumTemplate" x:DataType="vm:RightPanelViewModel">
-            <ScrollViewer>
+           <ScrollViewer x:Name="ImagesScrollViewer" ScrollChanged="ScrollViewer_ScrollChanged" AttachedToVisualTree="OnScrollViewerAttached">
                 <ir:ItemsRepeater ItemsSource="{Binding Parent.Images}">
                     <ir:ItemsRepeater.Layout>
-                        <UniformGridLayout Orientation="Horizontal" MinColumnSpacing="6" MinRowSpacing="15" MinItemWidth="256" MinItemHeight="276"/>
+                        <UniformGridLayout Orientation="Horizontal" MinColumnSpacing="8" MinRowSpacing="15" MinItemWidth="256" MinItemHeight="286"/>
                     </ir:ItemsRepeater.Layout>
                     <ir:ItemsRepeater.ItemTemplate>
                         <DataTemplate>
                             <Border Classes="selectable" Padding="4" CornerRadius="6">
                                 <Grid>
-                                    <StackPanel DoubleTapped="OnImageDoubleTapped">
-                                        <Image Source="{Binding Thumbnail, Converter={StaticResource ThumbnailConverter}, ConverterParameter=236}"
-                                            Width="236" Height="256"/>
-                                        <TextBlock Text="{Binding Name}" Margin="0,4,0,0"/>
+                                    <StackPanel Margin="0,4,0,0">
+                                        <Image Source="{Binding Thumbnail, Converter={StaticResource ThumbnailConverter}, ConverterParameter=256}" DoubleTapped="OnImageDoubleTapped"
+                                               Width="236" Height="256"/>
+                                        <TextBlock Text="{Binding Name}" DoubleTapped="OnTextBlockDoubleTapped" IsVisible="{Binding !IsEditing}"/>
+                                        <TextBox Text="{Binding Name, Mode=TwoWay}" IsVisible="{Binding IsEditing}" KeyDown="EditTextBox_KeyDown" LostFocus="EditTextBox_LostFocus"/>
                                     </StackPanel>
 
                                     <Button Classes="borderDeleteBtn" Width="20" Height="20" HorizontalAlignment="Right" VerticalAlignment="Top"
@@ -97,20 +115,21 @@
         </DataTemplate>
 
         <DataTemplate x:Key="BigTemplate" x:DataType="vm:RightPanelViewModel">
-            <ScrollViewer>
+           <ScrollViewer x:Name="ImagesScrollViewer" ScrollChanged="ScrollViewer_ScrollChanged" AttachedToVisualTree="OnScrollViewerAttached">
                 <ir:ItemsRepeater ItemsSource="{Binding Parent.Images}">
                     <ir:ItemsRepeater.Layout>
-                        <UniformGridLayout Orientation="Horizontal" MinColumnSpacing="10" MinRowSpacing="10" MinItemWidth="376" MinItemHeight="396"/>
+                        <UniformGridLayout Orientation="Horizontal" MinColumnSpacing="10" MinRowSpacing="10" MinItemWidth="376" MinItemHeight="386"/>
                     </ir:ItemsRepeater.Layout>
                     <ir:ItemsRepeater.ItemTemplate>
                         <DataTemplate>
                             <Border Classes="selectable" Padding="4" CornerRadius="6" >
                                 
                                 <Grid>
-                                    <StackPanel DoubleTapped="OnImageDoubleTapped">
-                                        <Image Source="{Binding Thumbnail, Converter={StaticResource ThumbnailConverter}}"
-                                            Width="356" Height="356"/>
-                                        <TextBlock Text="{Binding Name}" Margin="0,4,0,0"/>
+                                    <StackPanel Margin="0,4,0,0">
+                                        <Image Source="{Binding Thumbnail, Converter={StaticResource ThumbnailConverter}}" DoubleTapped="OnImageDoubleTapped"
+                                               Width="356" Height="356"/>
+                                        <TextBlock Text="{Binding Name}" DoubleTapped="OnTextBlockDoubleTapped" IsVisible="{Binding !IsEditing}"/>
+                                        <TextBox Text="{Binding Name, Mode=TwoWay}" IsVisible="{Binding IsEditing}" KeyDown="EditTextBox_KeyDown" LostFocus="EditTextBox_LostFocus"/>
                                     </StackPanel>
                                     <Button Classes="borderDeleteBtn" Width="24" Height="24" HorizontalAlignment="Right" VerticalAlignment="Top"
                                             BorderBrush="White" Background="#000000" BorderThickness="1.3" CornerRadius="6" Margin="2"
@@ -126,19 +145,20 @@
         </DataTemplate>
 
         <DataTemplate x:Key="GiganticTemplate" x:DataType="vm:RightPanelViewModel">
-            <ScrollViewer>
+           <ScrollViewer x:Name="ImagesScrollViewer" ScrollChanged="ScrollViewer_ScrollChanged" AttachedToVisualTree="OnScrollViewerAttached">
                 <ir:ItemsRepeater ItemsSource="{Binding Parent.Images}">
                     <ir:ItemsRepeater.Layout>
-                        <UniformGridLayout Orientation="Horizontal" MinColumnSpacing="10" MinRowSpacing="10" MinItemWidth="522" MinItemHeight="542"/>
+                        <UniformGridLayout Orientation="Horizontal" MinColumnSpacing="10" MinRowSpacing="10" MinItemWidth="522" MinItemHeight="532"/>
                     </ir:ItemsRepeater.Layout>
                     <ir:ItemsRepeater.ItemTemplate>
                         <DataTemplate>
                             <Border Classes="selectable" Padding="4" CornerRadius="6">
                                 <Grid>
-                                    <StackPanel DoubleTapped="OnImageDoubleTapped">
-                                        <Image Source="{Binding Thumbnail, Converter={StaticResource ThumbnailConverter}}"
-                                            Width="502" Height="502"/>
-                                        <TextBlock Text="{Binding Name}" Margin="0,4,0,0"/>
+                                    <StackPanel Margin="0,4,0,0">
+                                        <Image Source="{Binding Thumbnail, Converter={StaticResource ThumbnailConverter}}" DoubleTapped="OnImageDoubleTapped"
+                                               Width="502" Height="502"/>
+                                        <TextBlock Text="{Binding Name}" DoubleTapped="OnTextBlockDoubleTapped" IsVisible="{Binding !IsEditing}"/>
+                                        <TextBox Text="{Binding Name, Mode=TwoWay}" IsVisible="{Binding IsEditing}" KeyDown="EditTextBox_KeyDown" LostFocus="EditTextBox_LostFocus"/>
                                     </StackPanel>
 
                                     <Button Classes="borderDeleteBtn" Width="24" Height="24" HorizontalAlignment="Right" VerticalAlignment="Top"
@@ -164,12 +184,6 @@
         <conv:ThumbnailConverter x:Key="ThumbnailConverter" />
     </UserControl.Resources>
 
-    <Grid RowDefinitions="Auto,Auto,*">
-        <ContentControl x:Name="ContentHost" Margin="0,15,0,10" Grid.Row="2" Content="{Binding}"
-                        ContentTemplate="{Binding Parent.SelectedView, Converter={StaticResource ViewToTemplateConverter}}"/>
-        <Canvas Grid.Row="2" IsHitTestVisible="False"
-                x:Name="OverlayCanvas"  Background="Transparent">
-            <Rectangle x:Name="SelectionRect" Stroke="Blue" StrokeThickness="1" IsVisible="False"/>
-        </Canvas>
-    </Grid>
+    <ContentControl x:Name="ContentHost" Margin="0,12,0,10" Content="{Binding}"
+                    ContentTemplate="{Binding Parent.SelectedView, Converter={StaticResource ViewToTemplateConverter}}"/>
 </UserControl>

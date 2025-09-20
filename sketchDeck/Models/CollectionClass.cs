@@ -13,10 +13,10 @@ namespace sketchDeck.Models;
 public partial class CollectionItem : ObservableObject
 {
     public required SourceList<ImageItem> CollectionImages { get; set; }
-    [ObservableProperty] private int _leng;
     private IDisposable? _countDisposable;
-    [ObservableProperty] private string _name = string.Empty;
     [ObservableProperty] private bool _isEditing = false;
+    [ObservableProperty] private int _leng;
+    [ObservableProperty] private string _name = string.Empty;
     [ObservableProperty] private string sortBy = "Name";
     [ObservableProperty] private ListSortDirection sortDirection = ListSortDirection.Ascending;
     public static CollectionItem FromImages(SourceList<ImageItem> images, string name)
