@@ -29,7 +29,6 @@ using ReactiveUI;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 using sketchDeck.GlobalHooks;
-using sketchDeck.ImageOptimiztion;
 using sketchDeck.Models;
 
 namespace sketchDeck.ViewModels;
@@ -197,9 +196,6 @@ public class BaseWindow : Window
     protected readonly Grid LayoutGrid = new();
     protected readonly ZoomBorder PanAndZoomBorder;
     protected readonly Image Picture = new () { Stretch = Stretch.Uniform};
-    public readonly TiledImage BaseWindowTiledImage = new();
-    private readonly int _tileSize = 256;
-    private static PixelRect screenSize;
     protected StackPanel ControlsImagePanel = new() { Orientation = Orientation.Vertical, VerticalAlignment = VerticalAlignment.Bottom, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(10, 0, 0, 34) };
     protected bool _isTextBoxActiveNoPointerExist = false;
     private readonly TextBlock _missingFileText;
@@ -343,7 +339,6 @@ public class BaseWindow : Window
         contextMenu.Items.Add(pickerGrid);
 
         PanAndZoomBorder.ContextMenu = contextMenu;
-        PanAndZoomBorder.ZoomChanged += ZoomBorder_ZoomChanged;
 
         var mirrorPanel            = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5, Margin = new Thickness(0, 0, 0, 5) };
         var flipVerticalButton     = new Button { Width = 24, Height = 19, Padding = new Thickness(0), Content = new TextBlock { Text = "⇅", FontSize = 18, VerticalAlignment = VerticalAlignment.Center, TextAlignment = TextAlignment.Center, Margin = new Thickness(0, 0, 0, 2)}};
@@ -370,8 +365,6 @@ public class BaseWindow : Window
 
         this.PointerEntered += (_, _) => { ControlsImagePanel.IsVisible = true; };
         this.PointerExited  += (_, _) => { if (!_isTextBoxActiveNoPointerExist) { ControlsImagePanel.IsVisible = false; } };
-
-        screenSize = Screens.Primary != null ? Screens.Primary.Bounds : new PixelRect(0, 0, 1920, 1080);
     }
     public void StartPipett()
     {
@@ -492,14 +485,6 @@ public class BaseWindow : Window
         _isFlippedVertical   = false;
         ApplyTransform();
     }
-    private void ZoomBorder_ZoomChanged(object? sender, ZoomChangedEventArgs e)
-    {
-        BaseWindowTiledImage.ZoomLevel  = (float)e.ZoomX;
-        BaseWindowTiledImage.PanOffsetX = (float)e.OffsetX;
-        BaseWindowTiledImage.PanOffsetY = (float)e.OffsetY;
-        BaseWindowTiledImage.InvalidateVisual();
-    }
-
     private void ZoomBorder_KeyDown(object? sender, KeyEventArgs e)
     {
         if      (e.Key == Key.R)
