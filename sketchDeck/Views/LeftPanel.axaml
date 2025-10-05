@@ -2,45 +2,53 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:sketchDeck.ViewModels"
              xmlns:models="clr-namespace:sketchDeck.Models"
+             xmlns:t="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.TreeDataGrid"
              x:Class="sketchDeck.Views.LeftPanel"
              x:DataType="vm:LeftPanelViewModel">
 
-        <Grid Margin="0,15,0,0">
+        <Grid Margin="0,12,0,0">
             <Grid.RowDefinitions>
-                <RowDefinition Height="*" MinHeight="150" />
+                <RowDefinition Height="{Binding Parent.HeightLeftPanelChild, Mode=TwoWay}" MinHeight="150" />
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*" MinHeight="160"/>
                 <RowDefinition Height="*" MinHeight="50" MaxHeight="50"/>
             </Grid.RowDefinitions>
-            <Border Grid.Row="0" BorderBrush="#3C3C3C" BorderThickness="1" CornerRadius="6" Padding="12" Margin="10,0,0,0" BoxShadow="0 2 6 #80000000">
+            <Border Grid.Row="0" BorderBrush="#3C3C3C" BorderThickness="1" CornerRadius="6" Padding="8" Margin="10,0,0,0" BoxShadow="0 2 6 #80000000">
                 <DockPanel>
                     <TextBlock Text="Collections" FontSize="14" FontWeight="Bold" DockPanel.Dock="Top" Margin="0,0,0,8"/>
 
                     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
 
-                        <ListBox x:Name="CollectionsList" BorderThickness="0" DragDrop.AllowDrop="True" SelectionMode="Single"
+                        <ListBox x:Name="CollectionsList" BorderThickness="0" SelectionMode="Single"
                                  ItemsSource="{Binding Parent.Collections}" SelectedIndex="{Binding Parent.SelectedCollection}">
                                 <ListBox.ItemTemplate>
-                                        <DataTemplate DataType="models:CollectionItem">
-                                                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" MinHeight="30" MaxHeight="30">
-                                                    <TextBlock Grid.Column="0" Text="{Binding Name}" TextTrimming="CharacterEllipsis" Foreground="White" FontSize="13" MinWidth="50" HorizontalAlignment="Stretch" VerticalAlignment="Center"
-                                                               IsVisible="{Binding !IsEditing}" DoubleTapped="OnNameDoubleTapped"/>
-                                                    <TextBox Grid.Column="0" Text="{Binding Name, Mode=TwoWay}" IsVisible="{Binding IsEditing}" KeyDown="EditTextBox_KeyDown" LostFocus="EditTextBox_LostFocus"/>
-                                                    <TextBlock Grid.Column="1" Text="{Binding Leng}" FontSize="12" VerticalAlignment="Center"/>
-                                                    <Button Classes="CollectionDeleteBtn" Grid.Column="2" CornerRadius="6" Height="24" Width="24" HorizontalAlignment="Right" VerticalAlignment="Center"
-                                                            Click="DeleteCollection_Click">
+                                    <DataTemplate DataType="models:CollectionItem">
+                                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6" MinHeight="30" MaxHeight="30">
+                                                <TextBlock Grid.Column="0" Text="{Binding Name}" TextTrimming="CharacterEllipsis" Foreground="White" FontSize="13" MinWidth="50" HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                                                            IsVisible="{Binding !IsEditing}" DoubleTapped="OnNameDoubleTapped"/>
+                                                <TextBox Grid.Column="0" Text="{Binding Name, Mode=TwoWay}" IsVisible="{Binding IsEditing}" KeyDown="EditTextBox_KeyDown" LostFocus="EditTextBox_LostFocus"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding Leng}" FontSize="12" VerticalAlignment="Center"/>
+                                                <StackPanel Orientation="Horizontal" Spacing="4" Grid.Column="2" >
+                                                    <Button Classes="CollectionDeleteBtn" CornerRadius="6" Height="24" Width="24" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                            Click="DeleteCollection_Click" Focusable="False">
                                                         <Path Fill="White" Stroke="White" StrokeThickness="0"
-                                                              Data="M.42-1H5.28V.62H.42V-1ZM3.9953 7.1 5.4274 5.6679 4.2821 4.5226 2.85 5.9547 1.4179 4.5226.2726 5.6679 1.7047 7.1.2726 8.5321 1.4179 9.6774 2.85 8.2453 4.2821 9.6774 5.4274 8.5321 3.9953 7.1ZM7.71 2.24v9.72H-2.01V2.24H7.71ZM6.9.62V-1.81a.81.81 90 00-.81-.81H-.39a.81.81 90 00-.81.81V.62H-5.25V2.24h1.62V12.77a.81.81 90 00.81.81H8.52a.81.81 90 00.81-.81V2.24h1.62V.62H6.9Z"/>
+                                                                Data="M.42-1H5.28V.62H.42V-1ZM3.9953 7.1 5.4274 5.6679 4.2821 4.5226 2.85 5.9547 1.4179 4.5226.2726 5.6679 1.7047 7.1.2726 8.5321 1.4179 9.6774 2.85 8.2453 4.2821 9.6774 5.4274 8.5321 3.9953 7.1ZM7.71 2.24v9.72H-2.01V2.24H7.71ZM6.9.62V-1.81a.81.81 90 00-.81-.81H-.39a.81.81 90 00-.81.81V.62H-5.25V2.24h1.62V12.77a.81.81 90 00.81.81H8.52a.81.81 90 00.81-.81V2.24h1.62V.62H6.9Z"/>
                                                     </Button>
-                                                </Grid>
-                                        </DataTemplate>
+                                                    <Button Classes="CollectionEditBtn" Padding="3" CornerRadius="6" Height="24" Width="24" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                            Click="EditCollection_Click" Focusable="False">
+                                                        <Path Fill="White" Stroke="White" Stretch="Uniform" StrokeThickness="0" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                            Data="M3,17.25 L3,21 L6.75,21 L17.81,9.94 L14.06,6.19 L3,17.25 Z M20.71,7.04 C21.1,6.65 21.1,6.02 20.71,5.63 L18.37,3.29 C17.98,2.9 17.35,2.9 16.96,3.29 L15.13,5.12 L18.88,8.87 L20.71,7.04 Z"/>
+                                                    </Button>
+                                                </StackPanel>
+                                            </Grid>
+                                    </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
                     </ScrollViewer>
                 </DockPanel>
             </Border>
 
-            <GridSplitter Grid.Row="1" Height="15" Background="Transparent" ResizeDirection="Rows" ResizeBehavior="PreviousAndNext"/>
+            <GridSplitter Grid.Row="1" Height="10" Background="Transparent" ResizeDirection="Rows" ResizeBehavior="PreviousAndNext"/>
 
             <Border Grid.Row="2" Margin="10,0,0,0" BorderThickness="0">
                 <Grid RowDefinitions="Auto,Auto,Auto">

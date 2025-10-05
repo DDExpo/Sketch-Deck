@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,7 +9,6 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Controls.Shapes;
 using Avalonia.Controls.Templates;
 using Avalonia.Data.Converters;
 using Avalonia.Layout;
@@ -26,45 +27,81 @@ public partial class LeftPanelViewModel(MainWindowViewModel parent) : Observable
 {
     public MainWindowViewModel Parent { get; } = parent;
     public string[] Views { get; } = ["Gigantic", "Big", "Medium", "Small", "Details"];
-    [ObservableProperty] private string? _timeImage = "0";
-    [ObservableProperty] private bool _isShuffled = false;
-    public void SaveCollection(string name)
+    [ObservableProperty] private string? _timeImage = parent._settings.TimeImage;
+    [ObservableProperty] private bool _isShuffled = parent._settings.IsShuffled;
+    public async Task EditCollectionAsync(CollectionItem item, string name, string[]? fPaths, string[]? deletedPaths, Window window)
+    {
+        item.Name = name;
+        if (fPaths is null) return;
+        if (deletedPaths is not null) { foreach (var dp in deletedPaths) { item.RemoveWatcher(dp);}}
+
+        List<string> paths = [];
+        foreach (var folder in fPaths)
+        {
+            if (!item.Watchers.ContainsKey(folder))
+            {
+                var files = Directory.EnumerateFiles(folder, "*.*", SearchOption.AllDirectories)
+                                     .Where(f => FileFilters.AllowedExtensions.Contains(Path.GetExtension(f)));
+                paths.AddRange(files);
+            }
+            item.AddWatcher(folder);
+        }
+        await ImagesLoader([.. paths], window, true);
+    }
+    public async Task CreateCollectionAsync(string name, string[]? fPaths, Window window)
     {
         var newCollection = CollectionItem.FromImages(new SourceList<ImageItem>(), name);
+        List<string> paths = [];
+        if (fPaths is not null)
+        {
+            foreach (var folder in fPaths)
+            {
+                newCollection.AddWatcher(folder);
+                var files = Directory.EnumerateFiles(folder, "*.*", SearchOption.AllDirectories)
+                                     .Where(f => FileFilters.AllowedExtensions.Contains(Path.GetExtension(f)));
+                paths.AddRange(files);
+            }
+        }
         Parent.Collections.Add(newCollection);
         Parent.SelectedCollection = Parent.Collections.Count - 1;
+        await ImagesLoader([.. paths], window, true);
     }
 
-    public async Task LoadPathsAsync(string[] files, CancellationToken token)
+    public async Task LoadPathsAsync(string[] files, CancellationToken ct, bool mustBeInUnique = false)
     {
-        if (Parent.SelectedCollection is null || 
-            Parent.SelectedCollection < 0 || 
+        var tasks = files.Select(file => {
+            ct.ThrowIfCancellationRequested();
+            return ImageItem.FromPathAsync(file, null, null, null);
+        });
+        var newCollectionImages = await Task.WhenAll(tasks);
+        var curCollection = Parent.Collections[Parent.SelectedCollection!.Value];
+
+        if (mustBeInUnique)
+        {
+            foreach (var item in newCollectionImages)
+            {
+                curCollection.UniqueFoldersImagesPaths[item.PathImage] = item;
+            }
+        }
+        await Dispatcher.UIThread.InvokeAsync(() => { curCollection.CollectionImages.AddRange(newCollectionImages);});
+    }
+    public async Task ImagesLoader(string[] paths, Window window, bool mustBeInUnique=false)
+    {
+        if (Parent.SelectedCollection is null ||
+            Parent.SelectedCollection < 0 ||
             Parent.SelectedCollection >= Parent.Collections.Count)
             return;
 
-        foreach (var file in files)
-        {
-            token.ThrowIfCancellationRequested();
-            var item = await ImageItem.FromPathAsync(file);
-            Parent.CurrentImagePath = file;
-            Parent.Collections[Parent.SelectedCollection.Value].CollectionImages.Add(item);
-        }
-    }
-    public async Task ImagesLoader(string[] paths, Window window)
-    {
-        if (paths is null || paths.Length == 0) return;
         using var cts = new CancellationTokenSource();
 
-        var popup = new ProgressPopup { DataContext = Parent };
-
+        var popup = new ProgressPopup();
         popup.Closed += (_, __) => cts.Cancel();
-
         _ = popup.ShowDialog(window);
-
-        try { await LoadPathsAsync(paths, cts.Token); }
-        catch (OperationCanceledException) {}
-        finally
-        { if (popup.IsVisible) popup.Close();}
+        await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
+        
+        try { await Task.Run(() => LoadPathsAsync(paths, cts.Token, mustBeInUnique)); }
+        catch (OperationCanceledException) { }
+        finally { if (popup.IsVisible) popup.Close(); }
     }
 }
 public class ViewToTemplateConverter : IValueConverter
@@ -118,9 +155,10 @@ public class SessionWindow : BaseWindow
 
         LoadImage(_imArray[_shuffledIndices[_currentIndex]].PathImage, _imArray[_shuffledIndices[_currentIndex]].BgColor);
 
-        var overlayDock = new DockPanel { VerticalAlignment = VerticalAlignment.Bottom, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(10, 0, 20, 10) };
-        var controlsPanel = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Bottom, HorizontalAlignment = HorizontalAlignment.Left, Spacing = 5, IsVisible = true };
-
+        var overlayDock = new DockPanel { VerticalAlignment = VerticalAlignment.Bottom, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(10, 0, 0, 10) };
+        var controlsPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5, };
+        var resetTimerButton = new Button { Width = 24, Height = 19, Padding = new Thickness(0), Content = new TextBlock { Text = "↻", TextAlignment = TextAlignment.Center, FontSize = 13, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0) } };
+        resetTimerButton.Click += (_, _) => ResetTimer();
         var prevButton = new Button { Width = 24, Height = 19, Padding = new Thickness(0), Content = new TextBlock { Text = "<", TextAlignment = TextAlignment.Center, FontSize = 18, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, -1, 0, 0) } };
         prevButton.Click += (_, _) => ShowPrevious();
         _pausePlayButton = new Button { Width = 24, Height = 19, Padding = new Thickness(0), Content = _playButton, };
@@ -128,11 +166,11 @@ public class SessionWindow : BaseWindow
         var nextButton = new Button { Width = 24, Height = 19, Padding = new Thickness(0), Content = new TextBlock { Text = ">", TextAlignment = TextAlignment.Center, FontSize = 18, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, -1, 0, 0) } };
         nextButton.Click += (_, _) => ShowNext();
 
-        _counterText = new TextBlock { Text = $"{_currentIndex + 1} / {_imArray.Count}", VerticalAlignment = VerticalAlignment.Center, Foreground = Brushes.White, FontWeight = FontWeight.Bold, };
-        _timeText = new TextBlock { Text = _timePerImage > 0 ? FormatTime(_timePerImage) : "", HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Center, Foreground = Brushes.White, FontWeight = FontWeight.Bold, Margin = new Thickness(10, 0, 0, 0) };
+        _counterText = new TextBlock { Text = $"{_currentIndex + 1} / {_imArray.Count}", VerticalAlignment = VerticalAlignment.Center, Foreground = Brushes.White, FontWeight = FontWeight.Bold, Margin = new Thickness(29,0,0,0), Effect = new DropShadowDirectionEffect{ Color = Colors.Black, BlurRadius = 3, ShadowDepth = 0, Direction = 0, Opacity = 1}};
+        _timeText = new TextBlock { Text = _timePerImage > 0 ? FormatTime(_timePerImage) : "", HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Center, Foreground = Brushes.White, FontWeight = FontWeight.Bold, Margin = new Thickness(10, 0, 0, 0),  Effect = new DropShadowDirectionEffect{ Color = Colors.Black, BlurRadius = 3, ShadowDepth = 0, Direction = 0, Opacity = 1}};
 
         controlsPanel.Children.Add(prevButton);
-        if (_timePerImage > 0) { controlsPanel.Children.Add(_pausePlayButton); }
+        if (_timePerImage > 0) { controlsPanel.Children.Add(resetTimerButton); controlsPanel.Children.Add(_pausePlayButton); _counterText.Margin = new Thickness(0); }
         controlsPanel.Children.Add(nextButton);
         controlsPanel.Children.Add(_counterText);
         overlayDock.Children.Add(controlsPanel);
@@ -154,8 +192,8 @@ public class SessionWindow : BaseWindow
             PanAndZoomBorder.Background = new SolidColorBrush(PickerColor.Color);
             _imArray[_shuffledIndices[_currentIndex]].BgColor = new SolidColorBrush(PickerColor.Color);
         };
-        this.PointerEntered += (_, _) => controlsPanel.IsVisible = true;
-        this.PointerExited += (_, _) => controlsPanel.IsVisible = false;
+        this.PointerEntered += (_, _) => { controlsPanel.IsVisible = true; };
+        this.PointerExited += (_, _) => { controlsPanel.IsVisible = false; };
     }
     private void UpdateTimer()
     {
@@ -199,7 +237,7 @@ public class SessionWindow : BaseWindow
         else
         {
             _slideshowTimer.Start();
-            _pausePlayButton.Content = new Path
+            _pausePlayButton.Content = new Avalonia.Controls.Shapes.Path
             {
                 Data = Geometry.Parse("M 0 0 H 4 V 16 H 0 Z M 8 0 H 12 V 16 H 8 Z"),
                 Fill = Brushes.White,
@@ -217,12 +255,12 @@ public class SessionWindow : BaseWindow
         var t = TimeSpan.FromSeconds(seconds);
         return $"{(int)t.TotalHours}:{t.Minutes:D2}:{t.Seconds:D2}";
     }
+
     protected override void OnClosed(EventArgs e)
     {
         base.OnClosed(e);
 
-        if (Picture.Source is IDisposable disposable)
-            disposable.Dispose();
+        if (Picture.Source is IDisposable disposable) disposable.Dispose();
         Picture.Source = null;
         _slideshowTimer?.Stop();
         mainWindow.Show();

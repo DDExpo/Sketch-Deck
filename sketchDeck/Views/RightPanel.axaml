@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:sketchDeck.ViewModels"
              xmlns:conv="clr-namespace:sketchDeck.ViewModels"
+             xmlns:models="clr-namespace:sketchDeck.Models"
              xmlns:ir="using:Avalonia.Controls"
              x:Class="sketchDeck.Views.RightPanel"
              x:DataType="vm:RightPanelViewModel">
@@ -12,16 +13,16 @@
                 <DataGrid.Columns>
                     <DataGridTemplateColumn Width="64">
                         <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
+                            <DataTemplate x:DataType="models:ImageItem">
                                 <StackPanel DoubleTapped="OnImageDoubleTapped">
-                                    <Image Source="{Binding Thumbnail, Converter={StaticResource ThumbnailConverter}, ConverterParameter=64}" Width="48" Height="48" Margin="8"/>
+                                    <Image Source="{Binding Thumbnail^}" Width="48" Height="48" Margin="8"/>
                                 </StackPanel>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
                     <DataGridTemplateColumn Header="Name" Width="96" SortMemberPath="Name">
                         <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
+                            <DataTemplate x:DataType="models:ImageItem">
                                 <StackPanel VerticalAlignment="Center" Margin="4,0,4,0">
                                     <TextBlock Text="{Binding Name}" DoubleTapped="OnTextBlockDoubleTapped" IsVisible="{Binding !IsEditing}"/>
                                     <TextBox Text="{Binding Name, Mode=TwoWay}" IsVisible="{Binding IsEditing}" KeyDown="EditTextBox_KeyDown" LostFocus="EditTextBox_LostFocus"/>
@@ -44,12 +45,15 @@
                     </DataGridTemplateColumn>
                 </DataGrid.Columns>
                 <DataGrid.Styles>
-                    <Style Selector="DataGridCell:focus /template/ Grid#FocusVisual">
-                        <Setter Property="IsVisible" Value="False"/>
-                    </Style>
-                    <Style Selector="DataGridCell:current /template/ Rectangle#CurrencyVisual">
-                        <Setter Property="IsVisible" Value="False"/>
-                    </Style>
+                  <Style Selector="DataGridRow" x:DataType="models:ImageItem">
+                    <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
+                  </Style>
+                  <Style Selector="DataGridCell:focus /template/ Grid#FocusVisual">
+                    <Setter Property="IsVisible" Value="False"/>
+                   </Style>
+                   <Style Selector="DataGridCell:current /template/ Rectangle#CurrencyVisual">
+                    <Setter Property="IsVisible" Value="False"/>
+                  </Style>
                 </DataGrid.Styles>
             </DataGrid>
         </DataTemplate>
@@ -61,11 +65,11 @@
                         <UniformGridLayout Orientation="Horizontal" MinColumnSpacing="10" MinRowSpacing="15" MinItemWidth="128" MinItemHeight="158"/>
                     </ir:ItemsRepeater.Layout>
                     <ir:ItemsRepeater.ItemTemplate>
-                        <DataTemplate>
-                            <Border Classes="selectable" Padding="4" CornerRadius="6">
+                        <DataTemplate x:DataType="models:ImageItem">
+                            <Border Classes="selectable" Classes.selected="{Binding IsSelected}" Padding="4" CornerRadius="6" Tapped="OnBorderTapped">
                                 <Grid>
                                     <StackPanel Margin="0,4,0,0">
-                                        <Image Source="{Binding Thumbnail, Converter={StaticResource ThumbnailConverter}, ConverterParameter=128}" DoubleTapped="OnImageDoubleTapped"
+                                        <Image Source="{Binding Thumbnail^}" DoubleTapped="OnImageDoubleTapped"
                                                Width="128" Height="128"/>
                                         <TextBlock Text="{Binding Name}" DoubleTapped="OnTextBlockDoubleTapped" IsVisible="{Binding !IsEditing}"/>
                                         <TextBox Text="{Binding Name, Mode=TwoWay}" IsVisible="{Binding IsEditing}" KeyDown="EditTextBox_KeyDown" LostFocus="EditTextBox_LostFocus"/>
@@ -91,11 +95,11 @@
                         <UniformGridLayout Orientation="Horizontal" MinColumnSpacing="8" MinRowSpacing="15" MinItemWidth="256" MinItemHeight="286"/>
                     </ir:ItemsRepeater.Layout>
                     <ir:ItemsRepeater.ItemTemplate>
-                        <DataTemplate>
-                            <Border Classes="selectable" Padding="4" CornerRadius="6">
+                        <DataTemplate x:DataType="models:ImageItem">
+                            <Border Classes="selectable" Classes.selected="{Binding IsSelected}" Padding="4" CornerRadius="6" Tapped="OnBorderTapped">
                                 <Grid>
                                     <StackPanel Margin="0,4,0,0">
-                                        <Image Source="{Binding Thumbnail, Converter={StaticResource ThumbnailConverter}, ConverterParameter=256}" DoubleTapped="OnImageDoubleTapped"
+                                        <Image Source="{Binding Thumbnail^}" DoubleTapped="OnImageDoubleTapped"
                                                Width="236" Height="256"/>
                                         <TextBlock Text="{Binding Name}" DoubleTapped="OnTextBlockDoubleTapped" IsVisible="{Binding !IsEditing}"/>
                                         <TextBox Text="{Binding Name, Mode=TwoWay}" IsVisible="{Binding IsEditing}" KeyDown="EditTextBox_KeyDown" LostFocus="EditTextBox_LostFocus"/>
@@ -121,12 +125,11 @@
                         <UniformGridLayout Orientation="Horizontal" MinColumnSpacing="10" MinRowSpacing="10" MinItemWidth="376" MinItemHeight="386"/>
                     </ir:ItemsRepeater.Layout>
                     <ir:ItemsRepeater.ItemTemplate>
-                        <DataTemplate>
-                            <Border Classes="selectable" Padding="4" CornerRadius="6" >
-                                
+                        <DataTemplate x:DataType="models:ImageItem">
+                            <Border Classes="selectable" Classes.selected="{Binding IsSelected}" Padding="4" CornerRadius="6" Tapped="OnBorderTapped">
                                 <Grid>
                                     <StackPanel Margin="0,4,0,0">
-                                        <Image Source="{Binding Thumbnail, Converter={StaticResource ThumbnailConverter}}" DoubleTapped="OnImageDoubleTapped"
+                                        <Image Source="{Binding Thumbnail^}" DoubleTapped="OnImageDoubleTapped"
                                                Width="356" Height="356"/>
                                         <TextBlock Text="{Binding Name}" DoubleTapped="OnTextBlockDoubleTapped" IsVisible="{Binding !IsEditing}"/>
                                         <TextBox Text="{Binding Name, Mode=TwoWay}" IsVisible="{Binding IsEditing}" KeyDown="EditTextBox_KeyDown" LostFocus="EditTextBox_LostFocus"/>
@@ -151,11 +154,11 @@
                         <UniformGridLayout Orientation="Horizontal" MinColumnSpacing="10" MinRowSpacing="10" MinItemWidth="522" MinItemHeight="532"/>
                     </ir:ItemsRepeater.Layout>
                     <ir:ItemsRepeater.ItemTemplate>
-                        <DataTemplate>
-                            <Border Classes="selectable" Padding="4" CornerRadius="6">
+                        <DataTemplate x:DataType="models:ImageItem">
+                            <Border Classes="selectable" Classes.selected="{Binding IsSelected}" Padding="4" CornerRadius="6" Tapped="OnBorderTapped">
                                 <Grid>
                                     <StackPanel Margin="0,4,0,0">
-                                        <Image Source="{Binding Thumbnail, Converter={StaticResource ThumbnailConverter}}" DoubleTapped="OnImageDoubleTapped"
+                                        <Image Source="{Binding Thumbnail^}" DoubleTapped="OnImageDoubleTapped"
                                                Width="502" Height="502"/>
                                         <TextBlock Text="{Binding Name}" DoubleTapped="OnTextBlockDoubleTapped" IsVisible="{Binding !IsEditing}"/>
                                         <TextBox Text="{Binding Name, Mode=TwoWay}" IsVisible="{Binding IsEditing}" KeyDown="EditTextBox_KeyDown" LostFocus="EditTextBox_LostFocus"/>
@@ -165,7 +168,6 @@
                                             BorderBrush="White" BorderThickness="1.3" Background="#000000" CornerRadius="6" Margin="2"
                                             Click="DeleteItem_Click">
                                         <Path Data="M10.5-1.5l-15 15m15 0-15-15" Stroke="White" StrokeThickness="1.5" />
-                                    
                                     </Button>
                                 </Grid>
                             </Border>
@@ -181,7 +183,6 @@
                                       Medium="{StaticResource MediumTemplate}"
                                       Big="{StaticResource BigTemplate}"
                                       Gigantic="{StaticResource GiganticTemplate}"/>
-        <conv:ThumbnailConverter x:Key="ThumbnailConverter" />
     </UserControl.Resources>
 
     <ContentControl x:Name="ContentHost" Margin="0,12,0,10" Content="{Binding}"

@@ -1,20 +1,57 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        x:Class="sketchDeck.CustomAxaml.SaveCollectionWindow"
-        Width="300" Height="150"
+        xmlns:local="clr-namespace:sketchDeck.CustomAxaml"
+        x:Class="sketchDeck.CustomAxaml.SaveEditCollectionWindow"
+        Width="350" Height="280"
         CanResize="False"
         WindowStartupLocation="CenterOwner"
-        Title="New collection">
+        Title="Edit Collection">
 
-    <StackPanel Margin="16" Spacing="12" HorizontalAlignment="Center" VerticalAlignment="Center">
-        <StackPanel Orientation="Vertical" HorizontalAlignment="Center" Spacing="12">
-            <TextBlock Text="Enter a name for collection" FontSize="14" Foreground="White" HorizontalAlignment="Left"/>
-            <TextBox x:Name="InputBox" Width="250"/>
+    <StackPanel Margin="20" Spacing="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <StackPanel Orientation="Vertical" Spacing="6">
+            <TextBlock Text="Collection Name" FontSize="14" Foreground="White" FontWeight="SemiBold"/>
+            <TextBox x:Name="InputBox" Width="280" Height="30" Padding="6" Background="#2C2C2C" Foreground="White" BorderBrush="#555" CornerRadius="6"/>
         </StackPanel>
-
+        <StackPanel Orientation="Vertical" Spacing="6">
+            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <TextBlock Text="Folders Path" FontSize="14" Foreground="White" FontWeight="SemiBold"/>
+                <Border Width="18" Height="18" CornerRadius="9" Background="#666" VerticalAlignment="Center"
+                        ToolTip.Tip="Watches over images inside folder/folders.">
+                    <TextBlock Text="?" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontWeight="Bold"/>
+                </Border>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="6" x:DataType="local:SaveEditCollectionWindow">
+                <ComboBox x:Name="FolderBox" Width="244" Height="30" FontSize="12" Foreground="White" Padding="8,0,0,0" CornerRadius="6" IsHitTestVisible="True"
+                          ItemsSource="{Binding FolderPaths}">
+                            <ComboBox.SelectionBoxItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}" />
+                                </DataTemplate>
+                            </ComboBox.SelectionBoxItemTemplate>
+                           <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBox Text="{Binding Mode=TwoWay}" FontSize="12" Background="Transparent" BorderThickness="0" VerticalContentAlignment="Center" HorizontalContentAlignment="Left"/>
+                                    <Button Grid.Column="1" Width="20" Height="20" Padding="0" Background="Transparent" BorderThickness="0"
+                                            Click="RemovePath_Click" IsVisible="{Binding}">
+                                        <TextBlock Text="✕" FontWeight="SemiBold" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                    </Button>
+                                </Grid>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <Button HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Width="30" Margin="0" Padding="4" Height="30" FontWeight="SemiBold" CornerRadius="6"
+                        Click="Browse_Click">
+                    <Path Data="M3,6 L9,6 L11,8 L21,8 L21,20 L3,20 Z"
+                          Fill="White" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Button>
+            </StackPanel>
+        </StackPanel>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="12">
-            <Button Content="Save" Width="80" Click="Save_Click" HorizontalContentAlignment="Center"/>
-            <Button Content="Cancel" Width="80" Click="Cancel_Click" HorizontalContentAlignment="Center"/>
+            <Button Content="Save" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Width="80" Height="32" Background="#3A6EA5" BorderBrush="#3A6EA5" Foreground="White" FontWeight="SemiBold" CornerRadius="6"
+                    Click="Save_Click"/>
+            <Button Content="Cancel" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Width="80" Height="32" Background="#444" Foreground="White" FontWeight="SemiBold" BorderBrush="#555" CornerRadius="6"
+                    Click="Cancel_Click"/>
         </StackPanel>
     </StackPanel>
 </Window>

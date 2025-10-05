@@ -4,19 +4,30 @@
         xmlns:local="clr-namespace:sketchDeck.ViewModels"
         xmlns:views="clr-namespace:sketchDeck.Views"
         MinWidth="741" MinHeight="440"
+        Width="{Binding MainWindowWidth, Mode=TwoWay}"
+        Height="{Binding MainWindowHeight, Mode=TwoWay}"
         x:Class="sketchDeck.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="SketchDeck">
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="179" MinWidth="179" MaxWidth="356"/>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="*" MinWidth="310"/>
-        </Grid.ColumnDefinitions>
+        Title="SketchDeck"
+        DragDrop.AllowDrop="True"
+        DragDrop.DragEnter="DropWindow_DragEnter"
+        DragDrop.DragLeave="DropWindow_DragLeave"
+        DragDrop.Drop="DropWindow_Drop">
 
-        <views:LeftPanel Grid.Column="0" DataContext="{Binding LeftPanel}"/>
-        <GridSplitter Grid.Column="1" Width="15" Background="Transparent" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext"/>
-        <views:RightPanel Grid.Column="2" DataContext="{Binding RightPanel}"/>
+    <Grid>
+        <Border x:Name="Overlay" Background="#80000000" IsVisible="False" ZIndex="100" IsHitTestVisible="True">
+            <TextBlock Text="+"  FontSize="64"  Foreground="White"  HorizontalAlignment="Center" VerticalAlignment="Center" />
+        </Border>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="{Binding WidthLeftPanel, Mode=TwoWay}" MinWidth="179" MaxWidth="356"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*" MinWidth="310"/>
+            </Grid.ColumnDefinitions>
+            <views:LeftPanel Grid.Column="0" DataContext="{Binding LeftPanel}"/>
+            <GridSplitter Grid.Column="1" Width="15" Background="Transparent" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext"/>
+            <views:RightPanel Grid.Column="2" DataContext="{Binding RightPanel}"/>
+        </Grid>
     </Grid>
 </Window>

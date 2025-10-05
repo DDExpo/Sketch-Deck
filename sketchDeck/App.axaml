@@ -14,7 +14,7 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <MergeResourceInclude Source="/CustomAxaml/MyCheckBox.axaml"></MergeResourceInclude>
+                <MergeResourceInclude Source="/CustomAxaml/Controls/CheckBox.axaml"></MergeResourceInclude>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

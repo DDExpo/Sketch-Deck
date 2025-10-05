@@ -14,7 +14,7 @@ public partial class YesNoCancelDialog : Window
     public YesNoCancelDialog(string itemName, bool showNoButton)
     {
         InitializeComponent();
-        this.Icon = new WindowIcon("Assets/avalonia-logo.ico");
+        this.Icon = new WindowIcon(AppResources.AppIconPath);
         if (showNoButton)
         {
             MessagePrefix = "Do you wanna delete collection: ";

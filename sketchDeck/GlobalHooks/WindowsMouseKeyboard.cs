@@ -10,9 +10,11 @@ public class MouseKeyboardHook : IDisposable
 
     private const int WM_LBUTTONDOWN = 0x0201;
     private const int WM_LBUTTONUP = 0x0202;
-    private DateTime _lastLeftDownTime;
-    private const int CLICK_THRESHOLD_MS = 100;
     private const int WM_MBUTTONDOWN = 0x0207;
+    private const int WM_MOUSEMOVE = 0x0200;
+    private const int VK_LBUTTON = 0x01;
+    private bool _isDragging;
+    private POINT _startPoint;
 
     private const int WM_KEYDOWN = 0x0100;
 
@@ -34,7 +36,7 @@ public class MouseKeyboardHook : IDisposable
         _mouseHookId = SetWindowsHookEx(WH_MOUSE_LL, _mouseProc, GetModuleHandle(null), 0);
         _keyboardHookId = SetWindowsHookEx(WH_KEYBOARD_LL, _keyboardProc, GetModuleHandle(null), 0);
     }
-    public (int X, int Y) GetCursorPosition()
+    public static (int X, int Y) GetCursorPosition()
     {
         GetCursorPos(out POINT p);
         return (p.X, p.Y);
@@ -43,16 +45,36 @@ public class MouseKeyboardHook : IDisposable
     {
         if (nCode >= 0)
         {
-            int msg = wParam.ToInt32();
-            if (msg == WM_LBUTTONDOWN) { _lastLeftDownTime = DateTime.Now; }
-            else if (msg == WM_LBUTTONUP)
+            int msg = (int)wParam.ToInt64();
+            var hookStruct = Marshal.PtrToStructure<MSLLHOOKSTRUCT>(lParam);
+
+            switch (msg)
             {
-                if ((DateTime.Now - _lastLeftDownTime).TotalMilliseconds <= CLICK_THRESHOLD_MS)
-                {
-                    LeftClick?.Invoke();
-                }
+                case WM_LBUTTONDOWN:
+                    _startPoint = hookStruct.pt;
+                    _isDragging = false;
+                    break;
+
+                case WM_MOUSEMOVE:
+                    if ((GetKeyState(VK_LBUTTON) & 0x8000) != 0)
+                    {
+                        int dx = Math.Abs(hookStruct.pt.X - _startPoint.X);
+                        int dy = Math.Abs(hookStruct.pt.Y - _startPoint.Y);
+
+                        if (!_isDragging && (dx > 5 || dy > 5))
+                        {
+                            _isDragging = true;
+                        }
+                    }
+                    break;
+                case WM_MBUTTONDOWN:
+                    MiddleClick?.Invoke();
+                    break;
+
+                case WM_LBUTTONUP:
+                    if (!_isDragging) { LeftClick?.Invoke(); }
+                    break;
             }
-            else if (msg == WM_MBUTTONDOWN) MiddleClick?.Invoke();
         }
         return CallNextHookEx(_mouseHookId, nCode, wParam, lParam);
     }
@@ -66,7 +88,7 @@ public class MouseKeyboardHook : IDisposable
         }
         return CallNextHookEx(_keyboardHookId, nCode, wParam, lParam);
     }
-    public (byte R, byte G, byte B) GetPixelColor(int x, int y)
+    public static (byte R, byte G, byte B) GetPixelColor(int x, int y)
     {
         IntPtr hdc = GetDC(IntPtr.Zero);
         int pixel = GetPixel(hdc, x, y);
@@ -111,10 +133,21 @@ public class MouseKeyboardHook : IDisposable
     private static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
     [DllImport("gdi32.dll")]
     private static extern int GetPixel(IntPtr hdc, int nXPos, int nYPos);
+    [DllImport("user32.dll")]
+    private static extern short GetKeyState(int nVirtKey);
     [StructLayout(LayoutKind.Sequential)]
     private struct POINT
     {
         public int X;
         public int Y;
+    }
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MSLLHOOKSTRUCT
+    {
+        public POINT pt;
+        public uint mouseData;
+        public uint flags;
+        public uint time;
+        public IntPtr dwExtraInfo;
     }
 }

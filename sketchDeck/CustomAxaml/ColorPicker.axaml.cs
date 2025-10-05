@@ -1,18 +1,5 @@
-
-#define WINDOWS
-
-using System;
-using System.Runtime.InteropServices;
-
-using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Shapes;
 using Avalonia.Media;
-using Avalonia.Platform;
-using Avalonia.Threading;
-
-using sketchDeck.GlobalHooks;
-using sketchDeck.ViewModels;
 
 namespace sketchDeck.CustomAxaml;
 
@@ -23,7 +10,7 @@ public partial class ColorPickerWindow : Window
     public ColorPickerWindow(Color initialColor)
     {
         InitializeComponent();
-        this.Icon = new WindowIcon("Assets/avalonia-logo.ico");
+        this.Icon = new WindowIcon(AppResources.AppIconPath);
         Picker.ColorChanged += (_, __) => SelectedColor = initialColor;
     }
 }

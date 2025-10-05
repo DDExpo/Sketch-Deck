@@ -19,7 +19,7 @@ public partial class FileMissingDialog : Window
     public FileMissingDialog(string filePath)
     {
         InitializeComponent();
-        this.Icon = new WindowIcon("Assets/avalonia-logo.ico");
+        this.Icon = new WindowIcon(AppResources.AppIconPath);
         FilePath = filePath;
         DataContext = this;
     }
