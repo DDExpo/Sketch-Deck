@@ -10,8 +10,10 @@ Just a side project I made for myself. It’s open-source and free to use!.
 ## Download
 * If you just want to try it out, grab the latest .exe from the Releases page.
 
-## Demo
-<img src="demo/demo.gif" width=75% height=75%>
+## Example
+<div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center;">
+  <img src="images/2025-10-05_20-56-26.png" alt="Focus Mode" width="250" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+</div>
 
 ## Run
 
