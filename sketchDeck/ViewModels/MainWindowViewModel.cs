@@ -201,6 +201,7 @@ public class BaseWindow : Window
     private readonly int _tileSize = 256;
     private static PixelRect screenSize;
     protected StackPanel ControlsImagePanel = new() { Orientation = Orientation.Vertical, VerticalAlignment = VerticalAlignment.Bottom, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(10, 0, 0, 34) };
+    protected bool _isTextBoxActiveNoPointerExist = false;
     private readonly TextBlock _missingFileText;
     public readonly ColorPicker PickerColor;
     private Rectangle? _pipettPreview;
@@ -368,7 +369,7 @@ public class BaseWindow : Window
         LayoutGrid.Children.Add(ControlsImagePanel);
 
         this.PointerEntered += (_, _) => { ControlsImagePanel.IsVisible = true; };
-        this.PointerExited  += (_, _) => { ControlsImagePanel.IsVisible = false; };
+        this.PointerExited  += (_, _) => { if (!_isTextBoxActiveNoPointerExist) { ControlsImagePanel.IsVisible = false; } };
 
         screenSize = Screens.Primary != null ? Screens.Primary.Bounds : new PixelRect(0, 0, 1920, 1080);
     }
@@ -441,14 +442,11 @@ public class BaseWindow : Window
             catch (Exception ex)
             {
                 Picture.Source = new Bitmap("Assets/MissingImage.png");
-                Picture.Opacity = 0.5;
                 _missingFileText.Text = $"Failed to load:\n{path}\n{ex.Message}";
             }
         }
         else
         {
-            Picture.Source = new Bitmap("Assets/MissingImage.png");
-            Picture.Opacity = 0.5;
             _missingFileText.Text = $"File not found:\n{path}\nIt may have been deleted, renamed or moved.";
         }
     }
@@ -460,8 +458,8 @@ public class BaseWindow : Window
         var scaleY = _isFlippedVertical ? -1 : 1;
         transformGroup.Children.Add(new ScaleTransform(scaleX, scaleY));
         transformGroup.Children.Add(new RotateTransform(_currentRotation));
-        BaseWindowTiledImage.RenderTransform = transformGroup;
-        BaseWindowTiledImage.RenderTransformOrigin = new RelativePoint(0.5, 0.5, RelativeUnit.Relative);
+        Picture.RenderTransform = transformGroup;
+        Picture.RenderTransformOrigin = new RelativePoint(0.5, 0.5, RelativeUnit.Relative);
     }
     private void FlipHorizontal_Click(object? sender, RoutedEventArgs e)
     {

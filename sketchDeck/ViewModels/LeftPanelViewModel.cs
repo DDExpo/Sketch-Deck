@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics.Metrics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -11,6 +12,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Templates;
 using Avalonia.Data.Converters;
+using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
@@ -134,6 +136,7 @@ public class SessionWindow : BaseWindow
     private readonly Button _pausePlayButton;
     private readonly TextBlock _timeText;
     private readonly TextBlock _counterText;
+    private readonly TextBox _counterTextBox;
     private readonly TextBlock _playButton = new() { Text = "▶", TextAlignment = TextAlignment.Center, FontSize = 12, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, -1, 0, 0) };
     private readonly DispatcherTimer? _slideshowTimer;
     private readonly int[] _shuffledIndices;
@@ -166,13 +169,27 @@ public class SessionWindow : BaseWindow
         var nextButton = new Button { Width = 24, Height = 19, Padding = new Thickness(0), Content = new TextBlock { Text = ">", TextAlignment = TextAlignment.Center, FontSize = 18, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, -1, 0, 0) } };
         nextButton.Click += (_, _) => ShowNext();
 
-        _counterText = new TextBlock { Text = $"{_currentIndex + 1} / {_imArray.Count}", VerticalAlignment = VerticalAlignment.Center, Foreground = Brushes.White, FontWeight = FontWeight.Bold, Margin = new Thickness(29,0,0,0), Effect = new DropShadowDirectionEffect{ Color = Colors.Black, BlurRadius = 3, ShadowDepth = 0, Direction = 0, Opacity = 1}};
+
+        var textPanel = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+        _counterText = new TextBlock   { Text = $"{_currentIndex + 1}", VerticalAlignment = VerticalAlignment.Center, Foreground = Brushes.White, FontWeight = FontWeight.Bold, Margin = new Thickness(29,0,0,0), Effect = new DropShadowDirectionEffect{ Color = Colors.Black, BlurRadius = 3, ShadowDepth = 0, Direction = 0, Opacity = 1}};
+        _counterTextBox = new TextBox  { Text = $"{_currentIndex + 1}", VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(29, 0, 0, 0), Padding = new Thickness(3,0,0,0), IsVisible = false, Width = 48, MaxWidth = 48, MinWidth = 48, MaxHeight = 19, MinHeight = 19, Height = 19};
+        var totalText = new TextBlock  { Text = $" / {_imArray.Count}", VerticalAlignment = VerticalAlignment.Center, Foreground = Brushes.White, FontWeight = FontWeight.Bold, Effect = new DropShadowDirectionEffect{ Color = Colors.Black, BlurRadius = 3, ShadowDepth = 0, Direction = 0, Opacity = 1} };
+
+        _counterTextBox.KeyUp += (_, e) =>{ if (e.Key == Key.Enter)  { CommitEdit(); } };
+        _counterTextBox.LostFocus += (_, __) => CommitEdit();
+        _counterText.DoubleTapped += (_, __) => {  _isTextBoxActiveNoPointerExist = true; _counterText.IsVisible = false; _counterTextBox.Text = _counterText.Text; _counterTextBox.IsVisible = true; };
+
+        textPanel.Children.Add(_counterText);
+        textPanel.Children.Add(_counterTextBox);
+        textPanel.Children.Add(totalText);
+
         _timeText = new TextBlock { Text = _timePerImage > 0 ? FormatTime(_timePerImage) : "", HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Center, Foreground = Brushes.White, FontWeight = FontWeight.Bold, Margin = new Thickness(10, 0, 0, 0),  Effect = new DropShadowDirectionEffect{ Color = Colors.Black, BlurRadius = 3, ShadowDepth = 0, Direction = 0, Opacity = 1}};
+
 
         controlsPanel.Children.Add(prevButton);
         if (_timePerImage > 0) { controlsPanel.Children.Add(resetTimerButton); controlsPanel.Children.Add(_pausePlayButton); _counterText.Margin = new Thickness(0); }
         controlsPanel.Children.Add(nextButton);
-        controlsPanel.Children.Add(_counterText);
+        controlsPanel.Children.Add(textPanel);
         overlayDock.Children.Add(controlsPanel);
         if (_timePerImage > 0) { overlayDock.Children.Add(_timeText); }
         LayoutGrid.Children.Add(overlayDock);
@@ -193,7 +210,20 @@ public class SessionWindow : BaseWindow
             _imArray[_shuffledIndices[_currentIndex]].BgColor = new SolidColorBrush(PickerColor.Color);
         };
         this.PointerEntered += (_, _) => { controlsPanel.IsVisible = true; };
-        this.PointerExited += (_, _) => { controlsPanel.IsVisible = false; };
+        this.PointerExited  += (_, _) => { if (!_isTextBoxActiveNoPointerExist) { controlsPanel.IsVisible = false; } };
+    }
+    void CommitEdit()
+    {
+        _isTextBoxActiveNoPointerExist = false;
+        if (!int.TryParse(_counterTextBox.Text, out var value)) { value = _currentIndex + 1; }
+        value = Math.Clamp(value, 1, _imArray.Count) - 1;
+
+        _currentIndex = value;
+        _counterText.Text = (_currentIndex + 1).ToString();
+        LoadImage(_imArray[_shuffledIndices[_currentIndex]].PathImage, _imArray[_shuffledIndices[_currentIndex]].BgColor);
+        ResetTimer();
+        _counterText.IsVisible = true;
+        _counterTextBox.IsVisible = false;
     }
     private void UpdateTimer()
     {
@@ -216,14 +246,14 @@ public class SessionWindow : BaseWindow
     private void ShowNext()
     {
         _currentIndex = (_currentIndex + 1) % _shuffledIndices.Length;
-        _counterText.Text = $"{_currentIndex + 1} / {_imArray.Count}";
+        _counterText.Text = $"{_currentIndex + 1}";
         LoadImage(_imArray[_shuffledIndices[_currentIndex]].PathImage, _imArray[_shuffledIndices[_currentIndex]].BgColor);
         ResetTimer();
     }
     private void ShowPrevious()
     {
         _currentIndex = (_currentIndex - 1 + _shuffledIndices.Length) % _shuffledIndices.Length;
-        _counterText.Text = $"{_currentIndex + 1} / {_imArray.Count}";
+        _counterText.Text = $"{_currentIndex + 1}";
         LoadImage(_imArray[_shuffledIndices[_currentIndex]].PathImage, _imArray[_shuffledIndices[_currentIndex]].BgColor);
         ResetTimer();
     }
