@@ -3,7 +3,7 @@
         xmlns:local="clr-namespace:sketchDeck.CustomAxaml"
         x:DataType="local:FileMissingDialog"
         x:Class="sketchDeck.CustomAxaml.FileMissingDialog"
-        Width="520" Height="200"
+        Width="520" Height="180"
         WindowStartupLocation="CenterOwner"
         CanResize="False"
         Title="Missing File">
@@ -11,7 +11,7 @@
     <StackPanel Margin="20" Spacing="15">
         <TextBlock TextWrapping="Wrap">
             <Run Text="The file " />
-            <Run Text="{Binding FilePath}" FontWeight="Bold"/>
+            <Run x:Name="PathRun" Text=".." FontWeight="Bold"/>
             <Run Text=" does not exist. It may have been renamed or moved." />
         </TextBlock>
 

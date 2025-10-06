@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -7,8 +8,6 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 
-using sketchDeck.Models;
-
 namespace sketchDeck.CustomAxaml;
 
 public partial class SaveEditCollectionWindow : Window
@@ -16,17 +15,20 @@ public partial class SaveEditCollectionWindow : Window
     public string EnteredText => InputBox.Text ?? string.Empty; 
     public ObservableCollection<string> FolderPaths { get; } = [];
     public HashSet<string> DeletePaths { get; } = [];
-    public SaveEditCollectionWindow(CollectionItem? collection)
+    public string? CollectionName;
+    public string[]? CollectionFolders;
+    
+    public SaveEditCollectionWindow()
     {
         InitializeComponent();
         this.Icon = new WindowIcon(AppResources.AppIconPath);
-        FolderBox.SelectedIndex = 0;
-        if (collection is not null)
-        {
-            InputBox.Text = collection.Name;
-            foreach (var key in collection.Watchers.Keys) { FolderPaths.Add(key); };
-        }
         DataContext = this;
+    }
+    protected override void OnOpened(EventArgs e)
+    {
+        InputBox.Text = CollectionName;
+        if (CollectionFolders is not null) { foreach (var key in CollectionFolders) { FolderPaths.Add(key); } }
+        FolderBox.SelectedIndex = 0;
     }
      private void RemovePath_Click(object? sender, RoutedEventArgs e)
     {

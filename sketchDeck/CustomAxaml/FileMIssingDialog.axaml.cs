@@ -1,3 +1,4 @@
+using System;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
@@ -12,16 +13,20 @@ public enum FileMissingResult
 
 public partial class FileMissingDialog : Window
 {
-    public string FilePath { get; }
+    public string? FilePath { get; set; }
     public FileMissingResult Result { get; private set; } = FileMissingResult.None;
     public string? NewPath { get; private set; }
 
-    public FileMissingDialog(string filePath)
+    public FileMissingDialog()
     {
         InitializeComponent();
         this.Icon = new WindowIcon(AppResources.AppIconPath);
-        FilePath = filePath;
         DataContext = this;
+    }
+    protected override void OnOpened(EventArgs e)
+    {
+        base.OnOpened(e);
+        PathRun.Text = FilePath;
     }
 
     private async void SetNewPath_Click(object? sender, RoutedEventArgs e)

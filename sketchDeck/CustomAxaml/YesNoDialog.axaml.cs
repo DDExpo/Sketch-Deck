@@ -1,3 +1,4 @@
+using System;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 
@@ -8,27 +9,31 @@ namespace sketchDeck.CustomAxaml;
 
 public partial class YesNoCancelDialog : Window
 {
-    public string MessagePrefix { get; }
-    public string ItemName { get; }
-    public string MessageSuffix { get; }
-    public YesNoCancelDialog(string itemName, bool showNoButton)
+    public bool ShowNoButton { get; set; }
+    public new string? Name { get; set; }
+    public YesNoCancelDialog()
     {
         InitializeComponent();
         this.Icon = new WindowIcon(AppResources.AppIconPath);
-        if (showNoButton)
+        DataContext = this;
+    }
+    protected override void OnOpened(EventArgs e)
+    {
+        base.OnOpened(e);
+        if (ShowNoButton)
         {
-            MessagePrefix = "Do you wanna delete collection: ";
-            ItemName = itemName;
-            MessageSuffix = " and all images?";
+            Prefix.Text = "Do you wanna delete collection: ";
+            ItemName.Text = Name;
+            Suffix.Text = " and all images?";
+            NoButton.IsVisible = true;
         }
         else
         {
-            MessagePrefix = "Do you wanna delete collection?";
-            ItemName = "";
-            MessageSuffix = "";
+            Prefix.Text = "Do you wanna delete collection: ";
+            ItemName.Text = Name + "?";
+            Suffix.Text = "";
             NoButton.IsVisible = false;
         }
-        DataContext = this;
     }
     private void Yes_Click(object? sender, RoutedEventArgs e) => Close(DialogResult.Yes);
     private void No_Click(object? sender, RoutedEventArgs e) => Close(DialogResult.No);

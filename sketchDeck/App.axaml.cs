@@ -56,7 +56,7 @@ public partial class App : Application
 }
 public static class AppResources
 {
-    public const string AppIconPath = "Assets/avalonia-logo.ico";
+    public const string AppIconPath = "Assets/AppIcon.ico";
 }
 public class AppSettings
 {
@@ -77,7 +77,11 @@ public static class SettingsService
 
     public static AppSettings Load()
     {
-        if (!File.Exists(pathSettings)) return new AppSettings();
+        if (!File.Exists(pathSettings))
+        {
+            Directory.CreateDirectory(Path.Combine(AppContext.BaseDirectory, "bin"));
+            return new AppSettings();
+        };
         try { return JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(pathSettings)) ?? new AppSettings(); }
         catch { return new AppSettings(); }
     }

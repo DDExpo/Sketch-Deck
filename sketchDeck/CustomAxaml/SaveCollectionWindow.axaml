@@ -22,7 +22,7 @@
             </StackPanel>
             <StackPanel Orientation="Horizontal" Spacing="6" x:DataType="local:SaveEditCollectionWindow">
                 <ComboBox x:Name="FolderBox" Width="244" Height="30" FontSize="12" Foreground="White" Padding="8,0,0,0" CornerRadius="6" IsHitTestVisible="True"
-                          ItemsSource="{Binding FolderPaths}">
+                          ItemsSource="{Binding FolderPaths}" SelectedIndex="0">
                             <ComboBox.SelectionBoxItemTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding}" />

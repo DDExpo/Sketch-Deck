@@ -152,12 +152,13 @@ public partial class MainWindowViewModel : ObservableObject
             }
 
             var tasks = sCollection.CollectionImages
-                                       .Select(img => ImageItem.FromPathAsync(
-                                           img.PathImage,
-                                           img.Name,
-                                           img.PathThumbnail,
-                                           SerializableCollection.ParseOrDefault(img.BgColorHex)))
-                                       .ToList();
+                                    .Where(img => File.Exists(img.PathImage))
+                                    .Select(img => ImageItem.FromPathAsync(
+                                        img.PathImage,
+                                        img.Name,
+                                        img.PathThumbnail,
+                                        SerializableCollection.ParseOrDefault(img.BgColorHex)))
+                                    .ToList();
 
             var items = (await Task.WhenAll(tasks)).ToList();
             foreach (var item in items) { if (uniquePaths.Contains(item.PathImage)) { newCollection.UniqueFoldersImagesPaths[item.PathImage] = item; } }

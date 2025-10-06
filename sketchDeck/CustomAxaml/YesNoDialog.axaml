@@ -9,14 +9,14 @@
         x:DataType="local:YesNoCancelDialog">
     <StackPanel Margin="16" Spacing="12">
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="2">
-            <TextBlock Text="{Binding MessagePrefix}" FontSize="14"/>
-            <TextBlock Text="{Binding ItemName}"
+            <TextBlock x:Name="Prefix" FontSize="14"/>
+            <TextBlock x:Name="ItemName"
                     FontWeight="Bold"
                     FontSize="14"
                     TextTrimming="CharacterEllipsis"
                     TextWrapping="NoWrap"
                     MaxWidth="60"/>
-            <TextBlock Text="{Binding MessageSuffix}" FontSize="14"/>
+            <TextBlock x:Name="Suffix" FontSize="14"/>
         </StackPanel>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="16">
             <Button x:Name="YesButton" Content="Yes" Width="70" Click="Yes_Click" HorizontalContentAlignment="Center"/>

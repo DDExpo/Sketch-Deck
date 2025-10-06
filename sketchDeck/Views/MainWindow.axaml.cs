@@ -7,6 +7,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using sketchDeck.Models;
 using sketchDeck.ViewModels;
@@ -16,6 +17,7 @@ namespace sketchDeck.Views;
 public partial class MainWindow : Window
 {
     private bool _isDragOver = false;
+    private readonly DispatcherTimer _saveTimer;
     public MainWindow()
     {
         InitializeComponent();
@@ -27,6 +29,17 @@ public partial class MainWindow : Window
                 SerializableCollection.SaveToFile([.. vm.Collections]);
             }
         };
+        _saveTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromMinutes(15)
+        };
+        _saveTimer.Tick += (_, __) => AutoSave();
+        _saveTimer.Start();
+    }
+    private void AutoSave()
+    {
+        try { if (DataContext is MainWindowViewModel vm) { SerializableCollection.SaveToFile([.. vm.Collections]); } }
+        catch (Exception) { }
     }
     private void DropWindow_DragEnter(object sender, DragEventArgs e)
     {

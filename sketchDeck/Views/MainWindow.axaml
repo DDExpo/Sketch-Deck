@@ -8,7 +8,7 @@
         Height="{Binding MainWindowHeight, Mode=TwoWay}"
         x:Class="sketchDeck.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Icon="/Assets/avalonia-logo.ico"
+        Icon="/Assets/AppIcon.ico"
         Title="SketchDeck"
         DragDrop.AllowDrop="True"
         DragDrop.DragEnter="DropWindow_DragEnter"

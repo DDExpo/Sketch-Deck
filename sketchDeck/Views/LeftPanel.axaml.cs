@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -12,7 +11,7 @@ using Avalonia.Platform.Storage;
 using Avalonia.VisualTree;
 
 using DynamicData;
-
+using HarfBuzzSharp;
 using sketchDeck.CustomAxaml;
 using sketchDeck.Models;
 using sketchDeck.ViewModels;
@@ -59,7 +58,6 @@ public partial class LeftPanel : UserControl
         {
             lbi.Background = Brushes.Transparent;
 
-            Console.WriteLine(vm.Parent.SelectedImages);
             if (vm.Parent.SelectedImages != null)
             {
                 item.CollectionImages.AddRange(vm.Parent.SelectedImages);
@@ -147,8 +145,9 @@ public partial class LeftPanel : UserControl
 
         var btn = (Button)sender!;
         var item = (CollectionItem)btn.DataContext!;
-    
-        var dialog = new SaveEditCollectionWindow(item);
+
+        var dialog = new SaveEditCollectionWindow { CollectionName = item.Name, CollectionFolders = [.. item.Watchers.Keys] };
+
         var result = await dialog.ShowDialog<(string, string[], string[])?>(window!);
 
         if (result is not null)
@@ -163,7 +162,7 @@ public partial class LeftPanel : UserControl
     private async void CreateCollection_Click(object? sender, RoutedEventArgs e)
     {
         var window = this.VisualRoot as Window;
-        var dialog = new SaveEditCollectionWindow(null);
+        var dialog = new SaveEditCollectionWindow();
         var result = await dialog.ShowDialog<(string, string[], string[])?>(window!);
 
         if (result is not null)
@@ -177,18 +176,13 @@ public partial class LeftPanel : UserControl
     }
     private async void DeleteCollection_Click(object? sender, RoutedEventArgs e)
     {
-        Window dialog;
-
         if (DataContext is not LeftPanelViewModel vm) return;
         var btn = (Button)sender!;
         var item = (CollectionItem)btn.DataContext!;
 
-        if (vm.Parent.Collections.Count < 2)
-        {
-            dialog = new YesNoCancelDialog("", false);
-        } else {
-            dialog = new YesNoCancelDialog(item.Name, true);
-        }
+        var dialog = new YesNoCancelDialog { Name = item.Name, ShowNoButton = true};
+        if (vm.Parent.Collections.Count < 2) { dialog.ShowNoButton = false; }
+
         var window = this.VisualRoot as Window;
         var result = await dialog.ShowDialog<DialogResult>(window!);
 

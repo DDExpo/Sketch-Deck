@@ -19,6 +19,7 @@ using DynamicData;
 using sketchDeck.CustomAxaml;
 using sketchDeck.Models;
 using sketchDeck.ViewModels;
+using Splat;
 
 namespace sketchDeck.Views;
 
@@ -133,10 +134,23 @@ public partial class RightPanel : UserControl
 
         if (!File.Exists(item.PathImage))
         {
-            var dialog = new FileMissingDialog(item.PathImage);
+            var dialog = new FileMissingDialog { FilePath = item.PathImage };
             var result = await dialog.ShowDialog<FileMissingResult>((Window)this.GetVisualRoot()!);
 
-            if (result == FileMissingResult.SetNewPath && dialog.NewPath is not null) { item.PathImage = dialog.NewPath; }
+            if (result == FileMissingResult.SetNewPath && dialog.NewPath is not null)
+            {
+                if (item.PathImage == dialog.NewPath) { item.PathImage = dialog.NewPath; }
+                else
+                {
+                    ThumbnailRefs.ReleaseReference(item.ThumbnailPath);
+                    var newItem = await ImageItem.FromPathAsync(dialog.NewPath, null, null, null);
+                    item.PathImage = dialog.NewPath;
+                    item.Type = newItem.Type;
+                    item.Size = newItem.Size;
+                    item.DateModified = newItem.DateModified;
+                    item.ThumbnailPath = newItem.ThumbnailPath;
+                }
+            }
             else if (result == FileMissingResult.None) { return; }
         }
         new PreviewWindow(item).Show();

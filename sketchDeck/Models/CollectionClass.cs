@@ -6,7 +6,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-
+using System.Threading;
 using Avalonia.Media;
 using Avalonia.Threading;
 
@@ -113,6 +113,7 @@ public class SerializableCollection
 {
     private static readonly string saveFile = Path.Combine(AppContext.BaseDirectory, "bin", "save");
     private static readonly string backupFile = Path.Combine(AppContext.BaseDirectory, "bin", "backup");
+    private static readonly Lock _saveLock = new();
 
     public string Name { get; set; } = "";
     public SerializableImageItem[] CollectionImages { get; set; } = [];
@@ -167,17 +168,20 @@ public class SerializableCollection
                 var json = File.ReadAllText(backupFile);
                 return JsonSerializer.Deserialize<SerializableCollection[]>(json, _options) ?? [];
             }
-            return[];
+            return [];
         }
     }
 
     public static void SaveToFile(CollectionItem[] collections)
     {
-        var json = JsonSerializer.Serialize(collections.Select(ToSerializable), _options);
-        var tempFile = saveFile + ".tmp";
-        File.WriteAllText(tempFile, json);
+        lock (_saveLock)
+        {
+            var json = JsonSerializer.Serialize(collections.Select(ToSerializable), _options);
+            var tempFile = saveFile + ".tmp";
+            File.WriteAllText(tempFile, json);
 
-        if (File.Exists(saveFile)) { File.Copy(saveFile, backupFile, overwrite: true); }
-        File.Move(tempFile, saveFile, overwrite: true);
+            if (File.Exists(saveFile)) { File.Copy(saveFile, backupFile, overwrite: true); }
+            File.Move(tempFile, saveFile, overwrite: true);
+        }
     }
 }
