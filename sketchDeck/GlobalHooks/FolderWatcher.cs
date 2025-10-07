@@ -34,6 +34,49 @@ public class FolderWatcher : IDisposable
     }
     public void Start() => _watcher.EnableRaisingEvents = true;
     public void Stop() => _watcher.EnableRaisingEvents = false;
+    public static async Task<bool> WaitForFileReadyAsync(string path, int stableSeconds = 2, int checkIntervalMs = 1000, int maxWaitMinutes = 5)
+    {
+        var maxWaitMs = maxWaitMinutes * 60 * 1000;
+        var waitedMs = 0;
+
+        long lastSize = -1;
+        int stableTime = 0;
+
+        while (waitedMs < maxWaitMs)
+        {
+            if (!File.Exists(path))
+            {
+                await Task.Delay(checkIntervalMs);
+                waitedMs += checkIntervalMs;
+                continue;
+            }
+
+            long currentSize = 0;
+            bool readable = false;
+
+            try
+            {
+                currentSize = new FileInfo(path).Length;
+                using var stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+                readable = true;
+            }
+            catch { }
+
+            if (readable && currentSize == lastSize && currentSize > 0)
+            {
+                stableTime += checkIntervalMs;
+                if (stableTime >= stableSeconds * 1000) return true;
+            }
+            else
+            {
+                stableTime = 0;
+                lastSize = currentSize;
+            }
+            await Task.Delay(checkIntervalMs);
+            waitedMs += checkIntervalMs;
+            }
+        return false;
+    }
     private bool ShouldDebounce(string path)
     {
         var now = DateTime.UtcNow;
@@ -64,5 +107,6 @@ public class FolderWatcher : IDisposable
     public void Dispose()
     {
         _watcher.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

@@ -47,6 +47,8 @@ public partial class CollectionItem : ObservableObject
         {
             if (!UniqueFoldersImagesPaths.ContainsKey(path))
             {
+                if (!await FolderWatcher.WaitForFileReadyAsync(path)) { return; };
+
                 var image = await ImageItem.FromPathAsync(path, null, null, null);
                 UniqueFoldersImagesPaths[path] = image;
                 Dispatcher.UIThread.Post(() => { CollectionImages.Add(image); });

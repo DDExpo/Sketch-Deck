@@ -13,7 +13,7 @@ public static class Log
         {
             Directory.CreateDirectory(Path.GetDirectoryName(LogPath)!);
             var line = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}\n";
-            File.AppendAllText(LogPath, line);
+            File.WriteAllText(LogPath, line);
         }
         catch { }
     }
