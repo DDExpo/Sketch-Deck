@@ -280,6 +280,12 @@ public class SessionWindow : BaseWindow
             };
         }
     }
+    protected override void ZoomBorder_KeyDown(object? sender, KeyEventArgs e)
+    {
+        base.ZoomBorder_KeyDown(sender, e);
+        if      (e.Key == Key.Left)  ShowPrevious();
+        else if (e.Key == Key.Right) ShowNext();
+    }
     private static string FormatTime(int seconds)
     {
         var t = TimeSpan.FromSeconds(seconds);

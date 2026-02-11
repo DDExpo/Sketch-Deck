@@ -486,9 +486,9 @@ public class BaseWindow : Window
         _isFlippedVertical   = false;
         ApplyTransform();
     }
-    private void ZoomBorder_KeyDown(object? sender, KeyEventArgs e)
+    protected virtual void ZoomBorder_KeyDown(object? sender, KeyEventArgs e)
     {
-        if      (e.Key == Key.R)
+        if (e.Key == Key.R)
             PanAndZoomBorder?.ResetMatrix();
         else if (e.Key == Key.OemPlus || e.Key == Key.Add)
             PanAndZoomBorder?.ZoomIn();
