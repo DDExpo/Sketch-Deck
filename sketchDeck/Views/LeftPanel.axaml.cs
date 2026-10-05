@@ -11,7 +11,6 @@ using Avalonia.Platform.Storage;
 using Avalonia.VisualTree;
 
 using DynamicData;
-using HarfBuzzSharp;
 using sketchDeck.CustomAxaml;
 using sketchDeck.Models;
 using sketchDeck.ViewModels;
@@ -88,7 +87,7 @@ public partial class LeftPanel : UserControl
             FileTypeFilter = [
                 new FilePickerFileType("Image files")
                 {
-                    Patterns = ["*.png", "*.jpg", "*.jpeg"],
+                    Patterns = ["*.png", "*.jpg", "*.jpeg", "*jfif", "*webp"],
                     MimeTypes = ["image/png", "image/jpeg"]
                 }
             ]

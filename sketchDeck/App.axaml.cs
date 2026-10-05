@@ -95,6 +95,6 @@ public static class FileFilters
 {
     public static readonly HashSet<string> AllowedExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
-        ".png", ".jpg", ".jpeg"
+        ".png", ".jpg", ".jpeg", "jfif", "webp"
     };
 }

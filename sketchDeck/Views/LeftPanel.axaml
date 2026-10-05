@@ -81,7 +81,7 @@
                                 Click="CreateCollection_Click" />
                     </WrapPanel>
 
-                    <TextBox Grid.Row="1" Watermark="Search..." Height="28" FontSize="12" Margin="0,6,0,7" Padding="7" Foreground="White" BorderBrush="#444" CornerRadius="6"
+                    <TextBox Grid.Row="1" Watermark="Exclude: -Home| AND: art+oo| OR: oo po re" Height="28" FontSize="12" Margin="0,6,0,7" Padding="7" Foreground="White" BorderBrush="#444" CornerRadius="6"
                              Text="{Binding Parent.SearchTerm, UpdateSourceTrigger=Default}"/>
 
                         <Grid Grid.Row="2" ColumnDefinitions="Auto,8,*,8,Auto" Height="36" Margin="0">

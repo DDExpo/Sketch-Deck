@@ -30,6 +30,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 using sketchDeck.GlobalHooks;
 using sketchDeck.Models;
+using sketchDeck.Utils;
 
 namespace sketchDeck.ViewModels;
 
@@ -79,14 +80,24 @@ public partial class MainWindowViewModel : ObservableObject
             .WhereNotNull()
             .Select(c =>
                 c.CollectionImages.Connect()
-                    .Filter(this.WhenAnyValue(vm => vm.SearchTerm)
-                        .DistinctUntilChanged()
-                        .Select(term => new Func<ImageItem, bool>(item =>
-                            string.IsNullOrWhiteSpace(term) ||
-                            (item?.Name?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false))))
-                    .Sort(c.WhenAnyPropertyChanged(nameof(CollectionItem.SortBy), nameof(CollectionItem.SortDirection))
-                        .Select(_ => GetComparer(c.SortBy ?? "Name", c.SortDirection))
-                        .StartWith(GetComparer(c.SortBy ?? "Name", c.SortDirection)))
+                    .Filter(
+                        this.WhenAnyValue(vm => vm.SearchTerm)
+                            .DistinctUntilChanged()
+                            .Select(term =>
+                                new Func<ImageItem, bool>(item =>
+                                    SearchFilter.Matches(item?.Name, term)))
+                    )
+                    .Sort(
+                        c.WhenAnyPropertyChanged(
+                            nameof(CollectionItem.SortBy),
+                            nameof(CollectionItem.SortDirection))
+                        .Select(_ => GetComparer(
+                            c.SortBy ?? "Name",
+                            c.SortDirection))
+                        .StartWith(
+                            GetComparer(
+                                c.SortBy ?? "Name",
+                                c.SortDirection)))
             )
             .Switch()
             .Bind(out _images)
@@ -369,7 +380,7 @@ public class BaseWindow : Window
     }
     public void StartPipett()
     {
-        if (_pipettPreview != null) return;
+        if (_pipettPreview != null) { StopPipett();  return; }
 #if WINDOWS
         _mouseKeyboardHook              = new MouseKeyboardHook();
         _mouseKeyboardHook.LeftClick    += () => { PickerColor.Color = _currentColor;};
