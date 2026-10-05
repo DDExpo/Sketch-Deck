@@ -130,20 +130,38 @@ public partial class RightPanel : UserControl
     private async void OnImageDoubleTapped(object sender, TappedEventArgs args)
     {
         _tapCts?.Cancel();
+
         if (sender is not Control { DataContext: ImageItem item }) return;
+        if (DataContext is not RightPanelViewModel vm) return;
 
         if (!File.Exists(item.PathImage))
         {
-            var dialog = new FileMissingDialog { FilePath = item.PathImage };
-            var result = await dialog.ShowDialog<FileMissingResult>((Window)this.GetVisualRoot()!);
+            var dialog = new FileMissingDialog
+            {
+                FilePath = item.PathImage
+            };
+
+            var result = await dialog.ShowDialog<FileMissingResult>(
+                (Window)this.GetVisualRoot()!
+            );
 
             if (result == FileMissingResult.SetNewPath && dialog.NewPath is not null)
             {
-                if (item.PathImage == dialog.NewPath) { item.PathImage = dialog.NewPath; }
+                if (item.PathImage == dialog.NewPath)
+                {
+                    item.PathImage = dialog.NewPath;
+                }
                 else
                 {
                     ThumbnailRefs.ReleaseReference(item.ThumbnailPath);
-                    var newItem = await ImageItem.FromPathAsync(dialog.NewPath, null, null, null);
+
+                    var newItem = await ImageItem.FromPathAsync(
+                        dialog.NewPath,
+                        null,
+                        null,
+                        null
+                    );
+
                     item.PathImage = dialog.NewPath;
                     item.Type = newItem.Type;
                     item.Size = newItem.Size;
@@ -151,9 +169,13 @@ public partial class RightPanel : UserControl
                     item.ThumbnailPath = newItem.ThumbnailPath;
                 }
             }
-            else if (result == FileMissingResult.None) { return; }
+            else if (result == FileMissingResult.None)
+            {
+                return;
+            }
         }
-        new PreviewWindow(item).Show();
+
+        new PreviewWindow(vm.Parent.Collections, item).Show();
     }
     private void OnTextBlockDoubleTapped(object sender, TappedEventArgs args)
     {

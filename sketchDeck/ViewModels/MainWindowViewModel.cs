@@ -205,9 +205,11 @@ public partial class MainWindowViewModel : ObservableObject
 public class BaseWindow : Window
 {
     protected readonly MenuItem AlwaysOnTopItem;
+    protected readonly MenuItem AddToCollection;
     protected readonly Grid LayoutGrid = new();
     protected readonly ZoomBorder PanAndZoomBorder;
     protected readonly Image Picture = new () { Stretch = Stretch.Uniform};
+    private ImageItem _imageItem = new() { };
     protected StackPanel ControlsImagePanel = new() { Orientation = Orientation.Vertical, VerticalAlignment = VerticalAlignment.Bottom, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(10, 0, 0, 34) };
     protected bool _isTextBoxActiveNoPointerExist = false;
     private readonly TextBlock _missingFileText;
@@ -219,8 +221,17 @@ public class BaseWindow : Window
     private float _currentRotation = 0;
     private bool _isFlippedHorizontal = false;
     private bool _isFlippedVertical = false;
-    public BaseWindow()
+    private readonly TextBlock _titleText;
+    protected string TitleText
     {
+        get => _titleText.Text ?? "";
+        set => _titleText.Text = value;
+    }
+    private readonly ObservableCollection<CollectionItem> _collections;
+
+    public BaseWindow(ObservableCollection<CollectionItem> collections)
+    {
+        _collections                      = collections;
         Title                             = "";
         MinWidth                          = 120;
         MinHeight                         = 160;
@@ -246,7 +257,25 @@ public class BaseWindow : Window
         buttonStack.Children.Add(btnMinimize);
         buttonStack.Children.Add(btnMaximize);
         buttonStack.Children.Add(btnClose);
+        _titleText = new TextBlock
+        {
+            Text                = "",
+            FontSize            = 14,
+            Foreground          = Brushes.White,
+            FontWeight          = FontWeight.Bold,
+            Background          = new SolidColorBrush(Color.FromArgb(160, 0, 0, 0)),
+            ClipToBounds        = true,
+            TextTrimming        = TextTrimming.CharacterEllipsis,
+            TextAlignment       = TextAlignment.Center,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            VerticalAlignment   = VerticalAlignment.Center,
+            Padding             = new Thickness(8),
+        };
 
+        Grid.SetColumn(_titleText, 0);
+        Grid.SetColumn(buttonStack, 1);
+
+        titleBar.Children.Add(_titleText);
         titleBar.Children.Add(buttonStack);
         titleBar.DoubleTapped   += (_, _) => { WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized; };
         titleBar.PointerEntered += (_, _) => { titleBar.Opacity = 1; };
@@ -276,7 +305,7 @@ public class BaseWindow : Window
             FontSize            = 10,
             Foreground          = Brushes.White,
             FontWeight          = FontWeight.Bold,
-            Background          = new SolidColorBrush(Color.FromArgb(160, 0, 0, 0)),
+            Background          = new SolidColorBrush(Color.Parse("#323232")),
             TextAlignment       = TextAlignment.Center,
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment   = VerticalAlignment.Center,
@@ -320,9 +349,9 @@ public class BaseWindow : Window
         Grid.SetColumn(shortcutHint, 2);
 
         AlwaysOnTopItem       = new MenuItem { Header = headerGrid, StaysOpenOnClick = true };
-        AlwaysOnTopItem.Click += (_, _) => { Topmost = !Topmost; checkmark.Text = Topmost ? "✓" : string.Empty; };
+        AlwaysOnTopItem.Click += (_, _) =>   { Topmost = !Topmost; checkmark.Text = Topmost ? "✓" : string.Empty; };
 
-        var pickerGrid = new Grid { ColumnDefinitions = new ColumnDefinitions("15,*,Auto"), VerticalAlignment = VerticalAlignment.Center, ColumnSpacing = 15 };
+        var pickerGrid = new Grid        { ColumnDefinitions = new ColumnDefinitions("15,*,Auto"), VerticalAlignment = VerticalAlignment.Center, ColumnSpacing = 15 };
         PickerColor    = new ColorPicker { Width = 65, Height = 23, VerticalAlignment = VerticalAlignment.Center };
 
         var pipettButton = new Button { Width = 25, Height = 25, CornerRadius = new CornerRadius(6), VerticalAlignment = VerticalAlignment.Center, };
@@ -347,6 +376,50 @@ public class BaseWindow : Window
         Grid.SetColumn(shortcutPipettHint, 2);
 
         var contextMenu = new ContextMenu();
+        var addToCollectionHeader = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitions("15,*"),
+            VerticalAlignment = VerticalAlignment.Center,
+            ColumnSpacing = 15
+        };
+
+        var addToCollectionLabel = new TextBlock
+        {
+            Text = "Add to collection",
+            FontSize = 14,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+
+        addToCollectionHeader.Children.Add(addToCollectionLabel);
+        Grid.SetColumn(addToCollectionLabel, 1);
+
+        AddToCollection = new MenuItem
+        {
+            Header = addToCollectionHeader,
+            StaysOpenOnClick = true
+        };
+
+        foreach (var collection in _collections)
+        {
+            var collectionItem = new MenuItem
+            {
+                Header = collection.Name,
+            };
+
+            collectionItem.Click += async (_, _) =>
+            {
+                collection.CollectionImages.Add(
+                    await ImageItem.FromPathAsync(
+                        _imageItem.PathImage, _imageItem.Name,
+                        _imageItem.ThumbnailPath, _imageItem.BgColor
+                        )
+                    );
+            };
+
+            AddToCollection.Items.Add(collectionItem);
+        }
+
+        contextMenu.Items.Add(AddToCollection);
         contextMenu.Items.Add(AlwaysOnTopItem);
         contextMenu.Items.Add(pickerGrid);
 
@@ -428,31 +501,33 @@ public class BaseWindow : Window
         _mouseKeyboardHook = null;
     }
 
-    protected void LoadImage(string path, IBrush color)
+    protected void LoadImage(ImageItem im)
     {
         if (Picture.Source is IDisposable disposable) { disposable.Dispose(); Picture.Source = null; }
 
-        if (File.Exists(path))
+        if (File.Exists(im.PathImage))
         {
             _missingFileText.IsVisible = true;
             _missingFileText.Text = "Loading...";
             try
             {
-                Picture.Source = new Bitmap(path);
-                PanAndZoomBorder.Background = color;
-                PickerColor.Color = (color as SolidColorBrush)?.Color ?? Colors.Gray;
+                Picture.Source = new Bitmap(im.PathImage);
+                PanAndZoomBorder.Background = im.BgColor;
+                PickerColor.Color = (im.BgColor as SolidColorBrush)?.Color ?? Colors.Gray;
+                TitleText = System.IO.Path.GetFileName(im.PathImage);
+                _imageItem = im;
                 _missingFileText.Text = "";
                 _missingFileText.IsVisible = false;
             }
             catch (Exception ex)
             {
                 Picture.Source = new Bitmap("Assets/MissingImage.png");
-                _missingFileText.Text = $"Failed to load:\n{path}\n{ex.Message}";
+                _missingFileText.Text = $"Failed to load:\n{im.PathImage}\n{ex.Message}";
             }
         }
         else
         {
-            _missingFileText.Text = $"File not found:\n{path}\nIt may have been deleted, renamed or moved.";
+            _missingFileText.Text = $"File not found:\n{im.PathImage}\nIt may have been deleted, renamed or moved.";
         }
     }
     private void ApplyTransform()

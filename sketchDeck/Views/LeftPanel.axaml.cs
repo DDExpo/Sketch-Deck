@@ -71,7 +71,7 @@ public partial class LeftPanel : UserControl
         if (!int.TryParse(vm.TimeImage, out int time)) { time = 0; vm.TimeImage = "0"; }
         if (time > 86400) { time = 86400; vm.TimeImage = "86400"; }
         else if (time < 0) { time = 0; vm.TimeImage = "0"; }
-        var session = new SessionWindow(vm.Parent.Images, vm.IsShuffled, time);
+        var session = new SessionWindow(vm.Parent.Images, vm.IsShuffled, time, vm.Parent.Collections);
         session.Show();
     }
     private async void OpenFilesButton_Clicked(object sender, RoutedEventArgs args)

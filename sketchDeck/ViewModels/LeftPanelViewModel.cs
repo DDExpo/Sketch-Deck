@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics.Metrics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -144,7 +143,12 @@ public class SessionWindow : BaseWindow
     private int _currentIndex;
     private readonly int _timePerImage;
     private int _remainingSeconds;
-    public SessionWindow(ReadOnlyObservableCollection<ImageItem> imArray, bool isShuffle, int timePerImage)
+   public SessionWindow(
+        ReadOnlyObservableCollection<ImageItem> imArray,
+        bool isShuffle,
+        int timePerImage,
+        ObservableCollection<CollectionItem> collections
+    ): base(collections)
     {
         Title = "Session";
 
@@ -156,7 +160,7 @@ public class SessionWindow : BaseWindow
         if (isShuffle) { new Random().Shuffle(_shuffledIndices.AsSpan()); }
         _timePerImage = timePerImage;
 
-        LoadImage(_imArray[_shuffledIndices[_currentIndex]].PathImage, _imArray[_shuffledIndices[_currentIndex]].BgColor);
+        LoadImage(_imArray[_shuffledIndices[_currentIndex]]);
 
         var overlayDock = new DockPanel { VerticalAlignment = VerticalAlignment.Bottom, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(10, 0, 0, 10) };
         var controlsPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5, };
@@ -220,7 +224,7 @@ public class SessionWindow : BaseWindow
 
         _currentIndex = value;
         _counterText.Text = (_currentIndex + 1).ToString();
-        LoadImage(_imArray[_shuffledIndices[_currentIndex]].PathImage, _imArray[_shuffledIndices[_currentIndex]].BgColor);
+        LoadImage(_imArray[_shuffledIndices[_currentIndex]]);
         ResetTimer();
         _counterText.IsVisible = true;
         _counterTextBox.IsVisible = false;
@@ -247,14 +251,14 @@ public class SessionWindow : BaseWindow
     {
         _currentIndex = (_currentIndex + 1) % _shuffledIndices.Length;
         _counterText.Text = $"{_currentIndex + 1}";
-        LoadImage(_imArray[_shuffledIndices[_currentIndex]].PathImage, _imArray[_shuffledIndices[_currentIndex]].BgColor);
+        LoadImage(_imArray[_shuffledIndices[_currentIndex]]);
         ResetTimer();
     }
     private void ShowPrevious()
     {
         _currentIndex = (_currentIndex - 1 + _shuffledIndices.Length) % _shuffledIndices.Length;
         _counterText.Text = $"{_currentIndex + 1}";
-        LoadImage(_imArray[_shuffledIndices[_currentIndex]].PathImage, _imArray[_shuffledIndices[_currentIndex]].BgColor);
+        LoadImage(_imArray[_shuffledIndices[_currentIndex]]);
         ResetTimer();
     }
     private void TogglePause()

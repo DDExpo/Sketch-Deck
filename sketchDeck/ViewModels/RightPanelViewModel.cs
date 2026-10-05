@@ -1,5 +1,5 @@
 using System;
-
+using System.Collections.ObjectModel;
 using Avalonia.Media;
 
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -15,9 +15,9 @@ public partial class RightPanelViewModel(MainWindowViewModel parent) : Observabl
 
 public class PreviewWindow : BaseWindow
 {
-    public PreviewWindow(ImageItem im)
+    public PreviewWindow(ObservableCollection<CollectionItem> collections, ImageItem im) : base(collections)
     {
-        LoadImage(im.PathImage, im.BgColor);
+        LoadImage(im);
         ControlsImagePanel.Margin = new Avalonia.Thickness(10, 0, 0, 10);
         Content = LayoutGrid;
 
